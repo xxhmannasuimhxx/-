@@ -287,11 +287,11 @@ function threeCards(s, y, h, items, opts) {
   });
   const agenda = [
     ["", "はじめに ／ 今の体の状態を知る", "8分", GRAY],
-    ["1", "いま体に起きていること（秋バテ）", "12分", AMBER],
+    ["1", "いま体に起きていること（秋バテ）", "10分", AMBER],
     ["2", "朝 — 一日と夜を決める時間", "15分", AMBER],
     ["3", "昼 — 食事の見方と注意すること", "15分", AMBER],
-    ["4", "夜 — 入浴と睡眠で整える", "13分", AMBER],
-    ["5", "胃腸を整える食べ方と食材の選び方", "12分", AMBER],
+    ["4", "夜 — 入浴と睡眠で整える", "11分", AMBER],
+    ["5", "胃腸を整える食べ方と味噌汁の使い方", "16分", AMBER],
     ["6", "2学期に向けた準備", "3分", AMBER],
     ["7", "わが家のスタート作戦（ワーク）", "8分", SAGE],
     ["", "まとめ ／ おしらせ ／ 質疑", "4分", GRAY],
@@ -1683,7 +1683,125 @@ divider("04", "夜", "自律神経を整えるために\n『入浴』と『睡�
 }
 
 // ============================================================
-// 32. 旬の食材
+// 32. 最強フード「味噌汁」
+// ============================================================
+{
+  const s = newSlide();
+  header(s, "5. 胃腸と食材", "胃腸の働きが落ちているときの、最強フード");
+
+  card(s, M, 1.62, 4.6, 4.35, INK);
+  pill(s, M + 0.45, 1.98, 1.85, 0.42, "最強 FOOD", AMBER, 12);
+  s.addText("味噌汁", {
+    x: M + 0.45, y: 2.6, w: 3.7, h: 1.15, fontFace: JP, fontSize: 54, bold: true,
+    color: W, margin: 0, valign: "middle",
+  });
+  s.addText("一杯で、これだけのことが\n同時にできます。", {
+    x: M + 0.45, y: 3.95, w: 3.7, h: 0.85, fontFace: JP, fontSize: 15,
+    color: "C7D6E6", margin: 0, valign: "top", lineSpacingMultiple: 1.35,
+  });
+  s.addText("特別な材料も、\n新しい調理も要りません。", {
+    x: M + 0.45, y: 5.0, w: 3.7, h: 0.8, fontFace: JP, fontSize: 12.5,
+    color: "9FB4CC", margin: 0, valign: "top", lineSpacingMultiple: 1.35,
+  });
+
+  const merits = [
+    ["温かくて、消化にやさしい", "冷たいもので疲れた胃腸を、内側から温めます。", AMBER],
+    ["水分・塩分・ミネラルが一度に", "飲みものだけでは補えない分を、まとめてカバーできます。", "C77E3A"],
+    ["具で、何でも足せる", "たんぱく質も野菜も、入れるだけ。献立を考えなくて済みます。", SAGE],
+    ["食欲がなくても入る", "噛む力が要りません。汁だけでも、体には届きます。", INK],
+  ];
+  merits.forEach((mt, i) => {
+    const y = 1.62 + i * 1.11;
+    card(s, 5.75, y, 6.88, 1.02, CARD);
+    badge(s, 6.05, y + 0.24, 0.55, String(i + 1), mt[2], W, 15);
+    s.addText(mt[0], {
+      x: 6.8, y: y + 0.13, w: 5.6, h: 0.4, fontFace: JP, fontSize: 16, bold: true,
+      color: INK, margin: 0, valign: "middle",
+    });
+    s.addText(mt[1], {
+      x: 6.8, y: y + 0.53, w: 5.6, h: 0.38, fontFace: JP, fontSize: 12.5,
+      color: GRAY, margin: 0, valign: "middle",
+    });
+  });
+
+  banner(s, 6.18, "味噌そのものが発酵食品です。腸内環境にとってもうれしい一杯になります。", SAGE_LT, "2A5F4E", 0.85, 16);
+
+  s.addNotes(
+    "ここは言い切る。「迷ったら味噌汁」と覚えて帰ってもらう。\n" +
+    "夏のあいだ冷たいものが続いた胃腸に、いちばん負担が少なく栄養が入るのが味噌汁。次のスライドで具の話へ。"
+  );
+}
+
+// ============================================================
+// 33. 味噌汁の具の組み合わせ
+// ============================================================
+{
+  const s = newSlide();
+  header(s, "5. 胃腸と食材", "具の選び方 — 3つから1つずつ選ぶだけ");
+
+  const picks = [
+    ["① たんぱく質から1つ", ["豆腐", "油揚げ", "卵", "豚肉", "鮭・ツナ缶"], AMBER],
+    ["② 野菜・きのこ・海藻から1つ", ["わかめ", "冷凍ほうれん草", "キャベツ・玉ねぎ", "きのこ", "大根・じゃがいも"], SAGE],
+    ["③ 仕上げに1つ", ["ねぎ", "すりごま", "しょうが", "みょうが", "七味"], "C77E3A"],
+  ];
+  const cw = 3.71, gap = 0.4;
+  picks.forEach((pk, i) => {
+    const x = M + i * (cw + gap);
+    card(s, x, 1.62, cw, 3.15, CARD);
+    s.addShape(pptx.ShapeType.roundRect, {
+      x: x + 0.25, y: 1.88, w: cw - 0.5, h: 0.52, rectRadius: 0.09,
+      fill: { color: pk[2] }, line: { width: 0 },
+    });
+    s.addText(pk[0], {
+      x: x + 0.25, y: 1.88, w: cw - 0.5, h: 0.52, fontFace: JP, fontSize: 13, bold: true,
+      color: W, align: "center", valign: "middle", margin: 0,
+    });
+    pk[1].forEach((f, k) => {
+      const y = 2.55 + k * 0.42;
+      s.addShape(pptx.ShapeType.roundRect, {
+        x: x + 0.28, y, w: cw - 0.56, h: 0.35, rectRadius: 0.06,
+        fill: { color: W }, line: { color: LINE, width: 1 },
+      });
+      s.addText(f, {
+        x: x + 0.4, y, w: cw - 0.8, h: 0.35, fontFace: JP, fontSize: 12,
+        color: INK, valign: "middle", margin: 0,
+      });
+    });
+  });
+
+  s.addText("この組み合わせがおすすめ", {
+    x: M, y: 4.92, w: CW, h: 0.38, fontFace: JP, fontSize: 14, bold: true,
+    color: INK, margin: 0, valign: "middle",
+  });
+
+  const combos = [
+    ["豆腐 ＋ わかめ ＋ ねぎ", "まずはこれ。たんぱく質とミネラル", AMBER],
+    ["卵 ＋ ほうれん草 ＋ ごま", "鉄とたんぱく質。だるさ・立ちくらみに", ROSE],
+    ["豚肉 ＋ 大根 ＋ しょうが", "ビタミンB1で疲労回復。体も温まる", SAGE],
+  ];
+  combos.forEach((cb, i) => {
+    const x = M + i * (cw + gap);
+    card(s, x, 5.4, cw, 1.05, CARD);
+    s.addText(cb[0], {
+      x: x + 0.3, y: 5.5, w: cw - 0.6, h: 0.4, fontFace: JP, fontSize: 13.5, bold: true,
+      color: INK, margin: 0, valign: "middle",
+    });
+    s.addText(cb[1], {
+      x: x + 0.3, y: 5.9, w: cw - 0.6, h: 0.4, fontFace: JP, fontSize: 11.5,
+      color: cb[2], margin: 0, valign: "middle",
+    });
+  });
+
+  note(s, "※ 具が2つ入れば十分です。冷凍野菜と乾燥わかめを常備しておくと、包丁を使わずに作れます。");
+
+  s.addNotes(
+    "「①②③から1つずつ」という選び方だけ持って帰ってもらう。レシピを覚える必要はない。\n" +
+    "参加者に「今晩の味噌汁、何を入れますか？」とチャットで聞くと盛り上がる。"
+  );
+}
+
+// ============================================================
+// 34. 旬の食材
 // ============================================================
 {
   const s = newSlide();
