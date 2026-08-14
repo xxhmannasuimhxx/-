@@ -289,10 +289,10 @@ function threeCards(s, y, h, items, opts) {
     ["", "はじめに ／ 今の体の状態を知る", "8分", GRAY],
     ["1", "いま体に起きていること（秋バテ）", "12分", AMBER],
     ["2", "朝 — 一日と夜を決める時間", "15分", AMBER],
-    ["3", "昼 — 食事の見方と注意すること", "13分", AMBER],
+    ["3", "昼 — 食事の見方と注意すること", "15分", AMBER],
     ["4", "夜 — 入浴と睡眠で整える", "13分", AMBER],
     ["5", "胃腸を整える食べ方と食材の選び方", "12分", AMBER],
-    ["6", "2学期に向けた準備", "5分", AMBER],
+    ["6", "2学期に向けた準備", "3分", AMBER],
     ["7", "わが家のスタート作戦（ワーク）", "8分", SAGE],
     ["", "まとめ ／ おしらせ ／ 質疑", "4分", GRAY],
   ];
@@ -1040,7 +1040,90 @@ divider("03", "昼", "起きられない、だるい、イライラ\nを食事�
 }
 
 // ============================================================
-// 20. 昼に注意すること（カフェイン／糖質過多）
+// 20. 水分とミネラルの摂り方
+// ============================================================
+{
+  const s = newSlide();
+  header(s, "3. 昼", "水分とミネラル — 麦茶だけでは足りません");
+
+  card(s, M, 1.62, 5.3, 4.35, ROSE_LT);
+  s.addText("なぜ「水やお茶だけ」では足りないのか", {
+    x: M + 0.35, y: 1.92, w: 4.6, h: 0.42, fontFace: JP, fontSize: 15, bold: true,
+    color: ROSE, margin: 0, valign: "middle",
+  });
+  s.addText("汗で出ていくのは、水分だけではありません。塩分やミネラルも一緒に失われています。", {
+    x: M + 0.35, y: 2.45, w: 4.6, h: 0.85, fontFace: JP, fontSize: 13.5,
+    color: INK, margin: 0, valign: "top", lineSpacingMultiple: 1.4,
+  });
+  s.addText("水やお茶だけを補い続けると、体の中がうすまって、かえって不調が出ることがあります。", {
+    x: M + 0.35, y: 3.35, w: 4.6, h: 0.85, fontFace: JP, fontSize: 13.5,
+    color: INK, margin: 0, valign: "top", lineSpacingMultiple: 1.4,
+  });
+  s.addText("出やすいサイン", {
+    x: M + 0.35, y: 4.35, w: 4.6, h: 0.35, fontFace: JP, fontSize: 12.5, bold: true,
+    color: ROSE, margin: 0, valign: "middle",
+  });
+  const signs = ["頭 痛", "食欲が出ない", "だるい", "立ちくらみ"];
+  signs.forEach((t, i) => {
+    const x = M + 0.35 + (i % 2) * 2.32;
+    const y = 4.75 + Math.floor(i / 2) * 0.6;
+    s.addShape(pptx.ShapeType.roundRect, {
+      x, y, w: 2.15, h: 0.5, rectRadius: 0.08,
+      fill: { color: W }, line: { color: "E4C3BF", width: 1 },
+    });
+    s.addText(t, {
+      x, y, w: 2.15, h: 0.5, fontFace: JP, fontSize: 12.5, bold: true,
+      color: ROSE, align: "center", valign: "middle", margin: 0,
+    });
+  });
+
+  const ways = [
+    ["汁物を1日1杯", 1.75, SAGE,
+      "水分・塩分・ミネラルが、これ1つでまとめて摂れます。5分でできる組み合わせ。",
+      ["わかめ＋豆腐", "卵＋冷凍ほうれん草", "即席みそ汁＋わかめ"]],
+    ["果物と乳製品を足す", 1.25, AMBER,
+      "バナナ・すいか・梨、牛乳・ヨーグルト。カリウムやカルシウムが一緒に摂れます。", null],
+    ["一度に飲まず、回数を分ける", 1.25, INK,
+      "起きてすぐ／食事ごと／お風呂の前後に、コップ1杯ずつ。", null],
+  ];
+  let wy = 1.62;
+  ways.forEach((wv, i) => {
+    card(s, 6.35, wy, 6.28, wv[1], CARD);
+    badge(s, 6.65, wy + 0.24, 0.55, String(i + 1), wv[2], W, 15);
+    s.addText(wv[0], {
+      x: 7.4, y: wy + 0.16, w: 5.0, h: 0.42, fontFace: JP, fontSize: 16, bold: true,
+      color: INK, margin: 0, valign: "middle",
+    });
+    s.addText(wv[3], {
+      x: 7.4, y: wy + 0.6, w: 5.0, h: 0.5, fontFace: JP, fontSize: 12.5,
+      color: GRAY, margin: 0, valign: "top", lineSpacingMultiple: 1.3,
+    });
+    if (wv[4]) {
+      wv[4].forEach((c, k) => {
+        const cx = 7.4 + k * 1.68;
+        s.addShape(pptx.ShapeType.roundRect, {
+          x: cx, y: wy + 1.15, w: 1.55, h: 0.45, rectRadius: 0.08,
+          fill: { color: W }, line: { color: LINE, width: 1 },
+        });
+        s.addText(c, {
+          x: cx + 0.05, y: wy + 1.15, w: 1.45, h: 0.45, fontFace: JP, fontSize: 10.5,
+          color: INK, align: "center", valign: "middle", margin: 0,
+        });
+      });
+    }
+    wy += wv[1] + 0.05;
+  });
+
+  banner(s, 6.15, "いちばん簡単なのは「みそ汁を1杯足す」。水分・塩分・ミネラルが、これ1つでまとめて摂れます。", INK, W, 0.85, 16);
+
+  s.addNotes(
+    "「その不調、食事のサインかも」の視点③を、具体的な行動に落とすスライド。\n" +
+    "汗をたくさんかいた日や食欲が落ちているときは、経口補水液も選択肢になる、と口頭で補足する。"
+  );
+}
+
+// ============================================================
+// 21. 昼に注意すること（カフェイン／糖質過多）
 // ============================================================
 {
   const s = newSlide();
@@ -1793,46 +1876,6 @@ divider("04", "夜", "自律神経を整えるために\n『入浴』と『睡�
   banner(s, 5.85, "全部やらなくて大丈夫。各列から1つずつ選ぶくらいで十分です。", AMBER_LT, "8A4E13", 0.9, 15.5);
 
   s.addNotes("始業日は自治体差があるので相対表現にしてある。参加者に自分の家の始業日を書いてもらう。");
-}
-
-// ============================================================
-// 35. 「行きたくない」に備える
-// ============================================================
-{
-  const s = newSlide();
-  header(s, "6. 再開前の準備", "「行きたくない」と言われたときのために");
-
-  const items = [
-    ["理由を問い詰めない", "言葉にできないことのほうが多いです。「そっか」と、いったん受けとめるだけで十分。"],
-    ["体の痛みは、本物として扱う", "頭痛や腹痛は「ウソ」ではありません。まず体調として受けとめてください。"],
-    ["ハードルを段階に分ける", "「行く／行かない」ではなく、起きる → 着替える → 玄関まで → 校門まで、と分けます。"],
-    ["早めに相談する", "担任、養護教諭、スクールカウンセラー、かかりつけ医。抱え込まないでください。"],
-  ];
-  items.forEach((it, i) => {
-    const y = 1.62 + i * 1.1;
-    card(s, M, y, 8.85, 0.95, CARD);
-    badge(s, M + 0.32, y + 0.19, 0.57, String(i + 1), INK, W, 14);
-    s.addText(it[0], {
-      x: M + 1.08, y: y + 0.1, w: 7.55, h: 0.4, fontFace: JP, fontSize: 15.5, bold: true,
-      color: INK, margin: 0, valign: "middle",
-    });
-    s.addText(it[1], {
-      x: M + 1.08, y: y + 0.5, w: 7.55, h: 0.36, fontFace: JP, fontSize: 12.5,
-      color: GRAY, margin: 0, valign: "middle",
-    });
-  });
-
-  card(s, 9.85, 1.62, 2.78, 4.4, INK);
-  s.addText("親が\n先に不安に\nならない", {
-    x: 10.15, y: 2.0, w: 2.2, h: 1.2, fontFace: JP, fontSize: 19, bold: true,
-    color: W, margin: 0, valign: "top", lineSpacingMultiple: 1.25,
-  });
-  s.addText("子どもは、親の表情を\nよく見ています。\n\n「なんとかなる」と\n思っている大人が\nそばにいることが、\nいちばんの準備です。", {
-    x: 10.15, y: 3.5, w: 2.2, h: 2.3, fontFace: JP, fontSize: 12.5,
-    color: "C7D6E6", margin: 0, valign: "top", lineSpacingMultiple: 1.4,
-  });
-
-  s.addNotes("デリケートなパート。断定せず、選択肢を示す姿勢で。相談先を具体名で挙げることが一番の価値になる。");
 }
 
 // ============================================================
