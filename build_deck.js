@@ -289,12 +289,12 @@ function threeCards(s, y, h, items, opts) {
     ["", "はじめに ／ 今の体の状態を知る", "8分", GRAY],
     ["1", "いま体に起きていること（秋バテ）", "10分", AMBER],
     ["2", "朝 — 一日と夜を決める時間", "16分", AMBER],
-    ["3", "昼 — 食事の見方と注意すること", "13分", AMBER],
+    ["3", "昼 — 食事の見方と注意すること", "11分", AMBER],
     ["4", "夜 — 入浴と睡眠で整える", "11分", AMBER],
-    ["5", "胃腸を整える食べ方と味噌汁の使い方", "15分", AMBER],
+    ["5", "胃腸を整える食べ方と味噌汁の使い方", "16分", AMBER],
     ["6", "2学期に向けた準備", "3分", AMBER],
     ["7", "わが家のスタート作戦（ワーク）", "10分", SAGE],
-    ["", "まとめ ／ おしらせ ／ 質疑", "4分", GRAY],
+    ["", "まとめ ／ 質疑応答", "5分", GRAY],
   ];
   agenda.forEach((r, i) => {
     const y = 2.35 + i * 0.44;
@@ -1077,91 +1077,6 @@ divider("03", "昼", "起きられない、だるい、イライラ\nを食事�
   });
 
   s.addNotes("図はイメージであることを口頭でも言う。キーワードは「単品にしない」。");
-}
-
-// ============================================================
-// 20. 水分とミネラルの摂り方
-// ============================================================
-{
-  const s = newSlide();
-  header(s, "3. 昼", "水分とミネラル — 麦茶だけでは足りません");
-
-  card(s, M, 1.62, 5.3, 4.35, ROSE_LT);
-  s.addText("なぜ「水やお茶だけ」では足りないのか", {
-    x: M + 0.35, y: 1.92, w: 4.6, h: 0.42, fontFace: JP, fontSize: 15, bold: true,
-    color: ROSE, margin: 0, valign: "middle",
-  });
-  s.addText("汗で出ていくのは、水分だけではありません。塩分やミネラルも一緒に失われています。", {
-    x: M + 0.35, y: 2.45, w: 4.6, h: 0.85, fontFace: JP, fontSize: 13.5,
-    color: INK, margin: 0, valign: "top", lineSpacingMultiple: 1.4,
-  });
-  s.addText("水やお茶だけを補い続けると、体の中がうすまって、かえって不調が出ることがあります。", {
-    x: M + 0.35, y: 3.35, w: 4.6, h: 0.85, fontFace: JP, fontSize: 13.5,
-    color: INK, margin: 0, valign: "top", lineSpacingMultiple: 1.4,
-  });
-  s.addText("出やすいサイン", {
-    x: M + 0.35, y: 4.35, w: 4.6, h: 0.35, fontFace: JP, fontSize: 12.5, bold: true,
-    color: ROSE, margin: 0, valign: "middle",
-  });
-  const signs = ["頭 痛", "食欲が出ない", "だるい", "立ちくらみ"];
-  signs.forEach((t, i) => {
-    const x = M + 0.35 + (i % 2) * 2.32;
-    const y = 4.75 + Math.floor(i / 2) * 0.6;
-    s.addShape(pptx.ShapeType.roundRect, {
-      x, y, w: 2.15, h: 0.5, rectRadius: 0.08,
-      fill: { color: W }, line: { color: "E4C3BF", width: 1 },
-    });
-    s.addText(t, {
-      x, y, w: 2.15, h: 0.5, fontFace: JP, fontSize: 12.5, bold: true,
-      color: ROSE, align: "center", valign: "middle", margin: 0,
-    });
-  });
-
-  const ways = [
-    ["汁物を1日1杯", 1.75, SAGE,
-      "水分・塩分・ミネラルが、これ1つでまとめて摂れます。5分でできる組み合わせ。",
-      ["わかめ＋豆腐", "卵＋冷凍ほうれん草", "即席みそ汁＋わかめ"]],
-    ["果物と乳製品を足す", 1.25, AMBER,
-      "バナナ・すいか・梨、牛乳・ヨーグルト。カリウムやカルシウムが一緒に摂れます。", null],
-    ["一度に飲まず、回数を分ける", 1.25, INK,
-      "起きてすぐ／食事ごと／お風呂の前後に、コップ1杯ずつ。", null],
-  ];
-  let wy = 1.62;
-  ways.forEach((wv, i) => {
-    card(s, 6.35, wy, 6.28, wv[1], CARD);
-    badge(s, 6.65, wy + 0.24, 0.55, String(i + 1), wv[2], W, 15);
-    s.addText(wv[0], {
-      x: 7.4, y: wy + 0.16, w: 5.0, h: 0.42, fontFace: JP, fontSize: 16, bold: true,
-      color: INK, margin: 0, valign: "middle",
-    });
-    s.addText(wv[3], {
-      x: 7.4, y: wy + 0.6, w: 5.0, h: 0.5, fontFace: JP, fontSize: 12.5,
-      color: GRAY, margin: 0, valign: "top", lineSpacingMultiple: 1.3,
-    });
-    if (wv[4]) {
-      wv[4].forEach((c, k) => {
-        const cx = 7.4 + k * 1.68;
-        s.addShape(pptx.ShapeType.roundRect, {
-          x: cx, y: wy + 1.15, w: 1.55, h: 0.45, rectRadius: 0.08,
-          fill: { color: W }, line: { color: LINE, width: 1 },
-        });
-        s.addText(c, {
-          x: cx + 0.05, y: wy + 1.15, w: 1.45, h: 0.45, fontFace: JP, fontSize: 10.5,
-          color: INK, align: "center", valign: "middle", margin: 0,
-        });
-      });
-    }
-    wy += wv[1] + 0.05;
-  });
-
-  banner(s, 6.0, "いちばん簡単なのは「みそ汁を1杯足す」。水分・塩分・ミネラルが、これ1つでまとめて摂れます。", INK, W, 0.6, 15);
-
-  note(s, "※ 第1回の「こまめに・汗をかいた日は塩分もセット」を、2学期の生活に合わせて具体化しています。");
-
-  s.addNotes(
-    "「その不調、食事のサインかも」の視点③を、具体的な行動に落とすスライド。\n" +
-    "汗をたくさんかいた日や食欲が落ちているときは、経口補水液も選択肢になる、と口頭で補足する。"
-  );
 }
 
 // ============================================================
