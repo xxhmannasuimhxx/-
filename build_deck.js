@@ -288,12 +288,12 @@ function threeCards(s, y, h, items, opts) {
   const agenda = [
     ["", "はじめに ／ 今の体の状態を知る", "8分", GRAY],
     ["1", "いま体に起きていること（秋バテ）", "10分", AMBER],
-    ["2", "朝 — 一日と夜を決める時間", "15分", AMBER],
-    ["3", "昼 — 食事の見方と注意すること", "15分", AMBER],
+    ["2", "朝 — 一日と夜を決める時間", "16分", AMBER],
+    ["3", "昼 — 食事の見方と注意すること", "13分", AMBER],
     ["4", "夜 — 入浴と睡眠で整える", "11分", AMBER],
-    ["5", "胃腸を整える食べ方と味噌汁の使い方", "16分", AMBER],
+    ["5", "胃腸を整える食べ方と味噌汁の使い方", "15分", AMBER],
     ["6", "2学期に向けた準備", "3分", AMBER],
-    ["7", "わが家のスタート作戦（ワーク）", "8分", SAGE],
+    ["7", "わが家のスタート作戦（ワーク）", "10分", SAGE],
     ["", "まとめ ／ おしらせ ／ 質疑", "4分", GRAY],
   ];
   agenda.forEach((r, i) => {
@@ -785,44 +785,84 @@ divider("02", "朝", "目覚めてからの行動が、\nその日と夜を決�
 }
 
 // ============================================================
-// 14. 朝ごはんの最低ライン3レベル
+// 14. 朝ごはんも「同じ型」でOK
 // ============================================================
 {
   const s = newSlide();
-  header(s, "2. 朝", "朝ごはんの「最低ライン」3レベル");
+  header(s, "2. 朝", "朝ごはんも、第1回と同じ型でOK");
 
-  const levels = [
-    ["LEVEL 1", "まず水分＋一口", ["麦茶・牛乳・スープ", "バナナ／ヨーグルト", "一口サイズのおにぎり"],
-      "「朝は食べられない」子は、ここからで十分です。", GRAY],
-    ["LEVEL 2", "炭水化物＋たんぱく質", ["おにぎり＋ゆで卵", "パン＋チーズ", "ごはん＋納豆"],
-      "ここまで来ると、午前中の集中がもちます。", AMBER],
-    ["LEVEL 3", "＋汁物か果物", ["みそ汁・具だくさんスープ", "果物を1品", "野菜をひとつまみ"],
-      "水分とミネラルも一緒に。毎日でなくて大丈夫。", SAGE],
+  const kata = [
+    ["主 食", ["ごはん", "パン", "おにぎり", "冷凍うどん"], AMBER, ""],
+    ["たんぱく質", ["卵", "納豆", "チーズ", "ヨーグルト・牛乳"], SAGE, ""],
+    ["色", ["バナナ", "トマト", "のり"], ROSE, "朝は、ここまで届かなくて大丈夫"],
   ];
   const cw = 3.71, gap = 0.4;
-  levels.forEach((lv, i) => {
+  kata.forEach((k, i) => {
     const x = M + i * (cw + gap);
-    card(s, x, 1.62, cw, 3.95, CARD);
-    pill(s, x + 0.33, 1.9, 1.28, 0.36, lv[0], lv[4], 10.5);
-    s.addText(lv[1], {
-      x: x + 0.33, y: 2.42, w: cw - 0.66, h: 0.42, fontFace: JP, fontSize: 16.5, bold: true,
-      color: INK, margin: 0, valign: "middle",
+    card(s, x, 1.62, cw, 2.75, CARD);
+    s.addShape(pptx.ShapeType.roundRect, {
+      x: x + 0.28, y: 1.88, w: cw - 0.56, h: 0.55, rectRadius: 0.09,
+      fill: { color: k[2] }, line: { width: 0 },
     });
-    s.addText(lv[2].map((t, k) => ({ text: t, options: { bullet: true, breakLine: k < lv[2].length - 1 } })), {
-      x: x + 0.4, y: 2.95, w: cw - 0.75, h: 1.35, fontFace: JP, fontSize: 13,
-      color: INK, margin: 0, valign: "top", paraSpaceAfter: 6,
+    s.addText(k[0], {
+      x: x + 0.28, y: 1.88, w: cw - 0.56, h: 0.55, fontFace: JP, fontSize: 15, bold: true,
+      color: W, align: "center", valign: "middle", margin: 0,
     });
-    s.addText(lv[3], {
-      x: x + 0.33, y: 4.45, w: cw - 0.66, h: 0.9, fontFace: JP, fontSize: 12,
-      color: GRAY, margin: 0, valign: "top", lineSpacingMultiple: 1.3,
+    k[1].forEach((f, n) => {
+      const y = 2.6 + n * 0.4;
+      s.addText("・" + f, {
+        x: x + 0.42, y, w: cw - 0.84, h: 0.36, fontFace: JP, fontSize: 12.5,
+        color: INK, valign: "middle", margin: 0,
+      });
     });
+    if (k[3]) {
+      s.addText(k[3], {
+        x: x + 0.3, y: 3.9, w: cw - 0.6, h: 0.34, fontFace: JP, fontSize: 11,
+        color: ROSE, align: "center", valign: "middle", margin: 0,
+      });
+    }
+    if (i < 2) {
+      s.addText("＋", {
+        x: x + cw, y: 2.6, w: gap, h: 0.5, fontFace: JP, fontSize: 18, bold: true,
+        color: "AAB8C6", align: "center", valign: "middle", margin: 0,
+      });
+    }
   });
 
-  banner(s, 5.8, "目指すのは LEVEL 2。毎日 LEVEL 3 でなくて大丈夫です。", AMBER_LT, "8A4E13", 0.82, 16);
+  s.addText("それも無理な日は、ここまで下げて大丈夫", {
+    x: M, y: 4.6, w: CW, h: 0.38, fontFace: JP, fontSize: 14, bold: true,
+    color: INK, margin: 0, valign: "middle",
+  });
+
+  const ladder = [
+    ["まず水分＋一口", "麦茶・牛乳／バナナ／一口のおにぎり", GRAY],
+    ["主食＋たんぱく質", "おにぎり＋卵／パン＋チーズ／ごはん＋納豆", AMBER],
+    ["＋色", "果物やのりを1つ足せたら満点", SAGE],
+  ];
+  ladder.forEach((ld, i) => {
+    const x = M + i * (cw + gap);
+    card(s, x, 5.08, cw, 1.1, i === 1 ? AMBER_LT : CARD);
+    s.addText(ld[0], {
+      x: x + 0.3, y: 5.18, w: cw - 0.6, h: 0.4, fontFace: JP, fontSize: 14, bold: true,
+      color: ld[2] === GRAY ? INK : ld[2], margin: 0, valign: "middle",
+    });
+    s.addText(ld[1], {
+      x: x + 0.3, y: 5.58, w: cw - 0.6, h: 0.45, fontFace: JP, fontSize: 11,
+      color: GRAY, margin: 0, valign: "middle",
+    });
+    if (i < 2) {
+      s.addText("▶", {
+        x: x + cw, y: 5.08, w: gap, h: 1.1, fontFace: JP, fontSize: 11,
+        color: "AAB8C6", align: "center", valign: "middle", margin: 0,
+      });
+    }
+  });
+
+  note(s, "※ 覚える型はひとつだけ。第1回の「主食＋たんぱく質＋色」を、そのまま朝にも使います。目指すのは真ん中です。");
 
   s.addNotes(
-    "「朝ごはん＝きちんとした食卓」の思い込みを外す。\n" +
-    "レベル1でも意味がある（内臓の時計が動く）ことを伝えると、親の気持ちが軽くなる。"
+    "第1回で「主食＋たんぱく質＋色」をやっているので、新しい型は出さない。\n" +
+    "朝は「色」まで届かなくていい、と先に許可を出すのがポイント。下段は、それも無理な日の逃げ道。"
   );
 }
 
@@ -1114,7 +1154,9 @@ divider("03", "昼", "起きられない、だるい、イライラ\nを食事�
     wy += wv[1] + 0.05;
   });
 
-  banner(s, 6.15, "いちばん簡単なのは「みそ汁を1杯足す」。水分・塩分・ミネラルが、これ1つでまとめて摂れます。", INK, W, 0.85, 16);
+  banner(s, 6.0, "いちばん簡単なのは「みそ汁を1杯足す」。水分・塩分・ミネラルが、これ1つでまとめて摂れます。", INK, W, 0.6, 15);
+
+  note(s, "※ 第1回の「こまめに・汗をかいた日は塩分もセット」を、2学期の生活に合わせて具体化しています。");
 
   s.addNotes(
     "「その不調、食事のサインかも」の視点③を、具体的な行動に落とすスライド。\n" +
@@ -1123,103 +1165,65 @@ divider("03", "昼", "起きられない、だるい、イライラ\nを食事�
 }
 
 // ============================================================
-// 21. 昼に注意すること（カフェイン／糖質過多）
+// 21. 昼に注意すること（カフェイン）
 // ============================================================
 {
   const s = newSlide();
-  header(s, "3. 昼", "注意すること — カフェインと糖質");
+  header(s, "3. 昼", "注意すること — カフェイン");
 
-  card(s, M, 1.62, 5.76, 4.35, ROSE_LT);
-  badge(s, M + 0.4, 1.95, 0.55, "!", ROSE, W, 18);
-  s.addText("カフェイン摂取", {
-    x: M + 1.1, y: 1.95, w: 4.3, h: 0.55, fontFace: JP, fontSize: 19, bold: true,
+  card(s, M, 1.62, CW, 0.92, INK);
+  s.addText("カフェインの覚醒作用は、思っているより長く続きます。", {
+    x: M + 0.5, y: 1.62, w: CW - 1.0, h: 0.92, fontFace: JP, fontSize: 19, bold: true,
+    color: W, margin: 0, valign: "middle",
+  });
+
+  card(s, M, 2.75, 5.76, 3.2, ROSE_LT);
+  s.addText("夕方に飲むと、こうなります", {
+    x: M + 0.4, y: 3.02, w: 5.0, h: 0.4, fontFace: JP, fontSize: 14, bold: true,
     color: ROSE, margin: 0, valign: "middle",
   });
-  s.addText("夕方以降に飲むと、覚醒作用が夜まで続いてしまいます。", {
-    x: M + 0.4, y: 2.75, w: 5.0, h: 0.5, fontFace: JP, fontSize: 13.5,
-    color: INK, margin: 0, valign: "middle",
-  });
-  s.addShape(pptx.ShapeType.roundRect, {
-    x: M + 0.4, y: 3.35, w: 5.0, h: 0.62, rectRadius: 0.1,
-    fill: { color: W }, line: { color: "E4C3BF", width: 1 },
-  });
-  s.addText("15時以降は飲まないようにする", {
-    x: M + 0.4, y: 3.35, w: 5.0, h: 0.62, fontFace: JP, fontSize: 15, bold: true,
-    color: ROSE, align: "center", valign: "middle", margin: 0,
-  });
-  s.addText("子どもも同じです。エナジードリンク、\nコーヒー、濃い緑茶、コーラにも入っています。", {
-    x: M + 0.4, y: 4.15, w: 5.0, h: 0.85, fontFace: JP, fontSize: 12.5,
-    color: GRAY, margin: 0, valign: "top", lineSpacingMultiple: 1.35,
-  });
-  s.addText("夏休みは自由に飲めてしまうので、\n2学期前に「時間の約束」を決め直しておく。", {
-    x: M + 0.4, y: 5.05, w: 5.0, h: 0.8, fontFace: JP, fontSize: 12.5,
-    color: GRAY, margin: 0, valign: "top", lineSpacingMultiple: 1.35,
+  const chain = ["夕方以降に飲む", "寝つきが悪くなる", "翌朝、起きられない", "また夕方に飲む"];
+  chain.forEach((t, i) => {
+    const y = 3.5 + i * 0.6;
+    s.addShape(pptx.ShapeType.roundRect, {
+      x: M + 0.4, y, w: 5.0, h: 0.46, rectRadius: 0.08,
+      fill: { color: W }, line: { color: "E4C3BF", width: 1 },
+    });
+    s.addText(t, {
+      x: M + 0.4, y, w: 5.0, h: 0.46, fontFace: JP, fontSize: 13, bold: true,
+      color: INK, align: "center", valign: "middle", margin: 0,
+    });
   });
 
-  card(s, 7.27, 1.62, 5.76, 4.35, AMBER_LT);
-  badge(s, 7.67, 1.95, 0.55, "!", AMBER, W, 18);
-  s.addText("糖質の過多", {
-    x: 8.37, y: 1.95, w: 4.3, h: 0.55, fontFace: JP, fontSize: 19, bold: true,
-    color: "8A4E13", margin: 0, valign: "middle",
-  });
-  s.addText("血糖値の乱高下により、心と体の両方に不調が出ます。", {
-    x: 7.67, y: 2.75, w: 5.0, h: 0.5, fontFace: JP, fontSize: 13.5,
+  card(s, 7.27, 2.75, 5.76, 3.2, CARD);
+  s.addText("意外と入っているもの", {
+    x: 7.67, y: 3.02, w: 5.0, h: 0.4, fontFace: JP, fontSize: 14, bold: true,
     color: INK, margin: 0, valign: "middle",
   });
-  s.addShape(pptx.ShapeType.roundRect, {
-    x: 7.67, y: 3.35, w: 5.0, h: 0.62, rectRadius: 0.1,
-    fill: { color: W }, line: { color: "EBD4B8", width: 1 },
-  });
-  s.addText("「単品で食べない」だけで変わる", {
-    x: 7.67, y: 3.35, w: 5.0, h: 0.62, fontFace: JP, fontSize: 15, bold: true,
-    color: "8A4E13", align: "center", valign: "middle", margin: 0,
-  });
-  s.addText("ジュース、菓子パン、アイス、そうめん。\n夏休みは単品で済ませる場面が増えます。", {
-    x: 7.67, y: 4.15, w: 5.0, h: 0.85, fontFace: JP, fontSize: 12.5,
-    color: GRAY, margin: 0, valign: "top", lineSpacingMultiple: 1.35,
-  });
-  s.addText("やめさせるのではなく、\nたんぱく質を1つ添える・時間を決める。", {
-    x: 7.67, y: 5.05, w: 5.0, h: 0.8, fontFace: JP, fontSize: 12.5,
-    color: GRAY, margin: 0, valign: "top", lineSpacingMultiple: 1.35,
+  const sources = [
+    ["エナジードリンク", "とくに中高生は注意", ROSE],
+    ["コーヒー・カフェオレ", "1杯でもしっかり", "C77E3A"],
+    ["紅茶・緑茶・ほうじ茶", "麦茶にはほぼ入らない", AMBER],
+    ["コーラ・ココア・チョコ", "飲みもの以外にも", SAGE],
+  ];
+  sources.forEach((sc, i) => {
+    const y = 3.5 + i * 0.6;
+    s.addText(sc[0], {
+      x: 7.72, y, w: 3.1, h: 0.46, fontFace: JP, fontSize: 12.5, bold: true,
+      color: sc[2], margin: 0, valign: "middle",
+    });
+    s.addText(sc[1], {
+      x: 10.6, y, w: 2.3, h: 0.46, fontFace: JP, fontSize: 10.5,
+      color: GRAY, margin: 0, valign: "middle",
+    });
   });
 
-  note(s, "※ 禁止するほど反発が強くなります。「量」ではなく「時間」と「組み合わせ」で調整するのがコツです。");
+  banner(s, 6.15, "決めるのは1つだけ。「15時以降は飲まない」。それで夜がぐっとラクになります。", AMBER_LT, "8A4E13", 0.85, 16);
 
   s.addNotes(
-    "カフェインは子どもにも当てはまることを強調。エナジードリンクは中高生で要注意。\n" +
-    "糖質は「減らす」より「単品にしない」で伝える。血糖の波のスライドとつながる。"
+    "糖質・ジュースは第1回でやっているので、ここはカフェインに絞る。\n" +
+    "夏休みは自由に飲めてしまうので、2学期前に「時間の約束」を決め直す話としてつなげる。"
   );
-}
-
-// ============================================================
-// 21. 夏ごはんあるある × ちょい足し
-// ============================================================
-{
-  const s = newSlide();
-  header(s, "3. 昼", "夏ごはんあるある × ちょい足し");
-
-  const rows = [
-    [
-      { text: "よくある夏ごはん", options: { fill: { color: INK }, color: W, bold: true } },
-      { text: "起きやすいこと", options: { fill: { color: INK }, color: W, bold: true } },
-      { text: "ちょい足し", options: { fill: { color: INK }, color: W, bold: true } },
-    ],
-    ["そうめん・うどんだけ", "たんぱく質が足りず、だるい", "ゆで卵・ツナ・豚しゃぶ・納豆"],
-    ["菓子パン・ジュースの朝", "血糖の波でイライラ・眠い", "牛乳・ヨーグルト・チーズ"],
-    ["冷たいものばかり", "胃腸が疲れて食欲が落ちる", "温かい汁物を1品だけ"],
-    ["アイス・お菓子が主食化", "夕食が入らなくなる", "時間を決める（食後・15時まで）"],
-    ["麦茶だけで過ごす", "ミネラル不足で頭痛・だるさ", "みそ汁・スープ・果物"],
-  ];
-  s.addTable(rows, {
-    x: M, y: 1.62, w: CW, colW: [3.6, 4.0, 4.333],
-    fontFace: JP, fontSize: 14, color: INK, valign: "middle",
-    rowH: 0.62, border: { type: "solid", color: LINE, pt: 1 },
-    fill: { color: W }, align: "left", margin: [5, 12, 5, 12],
-  });
-
-  banner(s, 5.6, "献立を変えなくて大丈夫。いつものメニューに「1つ足す」だけで十分です。", SAGE_LT, "2A5F4E", 1.0, 16);
-
-  s.addNotes("第1回の「足し算」の考え方がここに戻ってくる。");
 }
 
 // ============================================================
@@ -1859,53 +1863,6 @@ divider("04", "夜", "自律神経を整えるために\n『入浴』と『睡�
   s.addNotes(
     "献立の相談として使えるスライド。「今週これを1つ買ってみる」という宿題にしてもいい。\n" +
     "薬ではないので「効く」と断定せず、「おすすめ」の表現にとどめる。"
-  );
-}
-
-// ============================================================
-// 34. 買い置きリスト
-// ============================================================
-{
-  const s = newSlide();
-  header(s, "5. 胃腸と食材", "買っておくだけ — 助かる「常備リスト」");
-
-  const stores = [
-    ["冷蔵庫に", ["卵", "納豆", "豆腐", "チーズ", "ヨーグルト・牛乳"], AMBER],
-    ["冷凍庫に", ["カットほうれん草", "冷凍ブロッコリー", "冷凍うどん", "しらす", "ミックスベジタブル"], "C77E3A"],
-    ["常温で", ["ツナ缶・さば缶", "のり・ふりかけ", "乾燥わかめ", "即席みそ汁", "バナナ"], SAGE],
-  ];
-  const cw = 3.71, gap = 0.4;
-  stores.forEach((st, i) => {
-    const x = M + i * (cw + gap);
-    card(s, x, 1.62, cw, 4.0, CARD);
-    s.addShape(pptx.ShapeType.roundRect, {
-      x: x + 0.28, y: 1.92, w: cw - 0.56, h: 0.6, rectRadius: 0.09,
-      fill: { color: st[2] }, line: { width: 0 },
-    });
-    s.addText(st[0], {
-      x: x + 0.28, y: 1.92, w: cw - 0.56, h: 0.6, fontFace: JP, fontSize: 15, bold: true,
-      color: W, align: "center", valign: "middle", margin: 0,
-    });
-    st[1].forEach((f, k) => {
-      const y = 2.68 + k * 0.57;
-      s.addShape(pptx.ShapeType.roundRect, {
-        x: x + 0.3, y, w: cw - 0.6, h: 0.47, rectRadius: 0.08,
-        fill: { color: W }, line: { color: LINE, width: 1 },
-      });
-      s.addText(f, {
-        x: x + 0.42, y, w: cw - 0.84, h: 0.47, fontFace: JP, fontSize: 12.5,
-        color: INK, valign: "middle", margin: 0,
-      });
-    });
-  });
-
-  banner(s, 5.82, "第1回で決めた「レスキュー食材3つ」に、2学期の朝ごはん用を少しだけ足しておきます。", SAGE_LT, "2A5F4E", 0.85, 16);
-
-  note(s, "※ 全部そろえなくて大丈夫。冷蔵庫の1段を「足すもの置き場」にするだけで、朝の手が動きます。");
-
-  s.addNotes(
-    "献立を考えるのではなく、買い物を変えるという話。ここがいちばんハードルが低い。\n" +
-    "第1回の「レスキュー食材3つ」の延長として話すと、2回の講座がつながる。"
   );
 }
 
