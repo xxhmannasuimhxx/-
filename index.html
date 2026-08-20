@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#3f8f7a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>現在地ノート</title>
+<style>
+:root{
+  --bg:#f6f5f1; --surface:#ffffff; --surface2:#f0efe9;
+  --line:#e2e0d8; --line2:#d4d1c6;
+  --text:#25292b; --muted:#6f7679; --faint:#9aa0a2;
+  --accent:#3f8f7a; --accent-soft:#e6f1ed; --accent-ink:#2b6a59;
+  --warm:#c07a3e; --warm-soft:#f8eee2;
+  --danger:#b4503f;
+  --h1:#f1efe9; --h2:#e3ddc9; --h3:#e9c98d; --h4:#dfa45f; --h5:#c9793c;
+  --g1:#f1efe9; --g2:#d8e8e1; --g3:#a8d2c4; --g4:#6cb49f; --g5:#3a8d77;
+  --rw1:#f1efe9; --rw2:#efe0c4; --rw3:#eccd93; --rw4:#e3ae6d; --rw5:#d68f4f;
+  --rg1:#f1efe9; --rg2:#dcece5; --rg3:#b6dbcd; --rg4:#8ccab5; --rg5:#63b39b;
+  --on-ink:#1c2321;
+  --radius:14px;
+  --shadow:0 1px 2px rgba(30,35,35,.05), 0 6px 18px rgba(30,35,35,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15181a; --surface:#1e2225; --surface2:#262b2e;
+    --line:#31373b; --line2:#3d4449;
+    --text:#e8eaea; --muted:#9aa3a7; --faint:#6d767a;
+    --accent:#6fc7ae; --accent-soft:#20342f; --accent-ink:#8fd8c2;
+    --warm:#d99b62; --warm-soft:#33291f;
+    --danger:#e0806e;
+    --h1:#262b2e; --h2:#3a3427; --h3:#5c4a2c; --h4:#8a6533; --h5:#bf8542;
+    --g1:#262b2e; --g2:#2a3b36; --g3:#35594f; --g4:#43806e; --g5:#5fb096;
+    --rw1:#262b2e; --rw2:#33291f; --rw3:#453520; --rw4:#5c4526; --rw5:#78582c;
+    --rg1:#262b2e; --rg2:#223229; --rg3:#24402f; --rg4:#2a4f3c; --rg5:#305f47;
+    --on-ink:#f0f2f2;
+    --shadow:0 1px 2px rgba(0,0,0,.25), 0 6px 18px rgba(0,0,0,.22);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15181a; --surface:#1e2225; --surface2:#262b2e;
+  --line:#31373b; --line2:#3d4449;
+  --text:#e8eaea; --muted:#9aa3a7; --faint:#6d767a;
+  --accent:#6fc7ae; --accent-soft:#20342f; --accent-ink:#8fd8c2;
+  --warm:#d99b62; --warm-soft:#33291f;
+  --danger:#e0806e;
+  --h1:#262b2e; --h2:#3a3427; --h3:#5c4a2c; --h4:#8a6533; --h5:#bf8542;
+  --g1:#262b2e; --g2:#2a3b36; --g3:#35594f; --g4:#43806e; --g5:#5fb096;
+  --shadow:0 1px 2px rgba(0,0,0,.25), 0 6px 18px rgba(0,0,0,.22);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",Meiryo,sans-serif;
+  font-size:15px; line-height:1.65; -webkit-text-size-adjust:100%;
+  padding-bottom:calc(72px + env(safe-area-inset-bottom));
+}
+.wrap{max-width:620px;margin:0 auto;padding:0 14px}
+
+/* ---------- header ---------- */
+header{
+  position:sticky; top:0; z-index:20; background:var(--bg);
+  border-bottom:1px solid var(--line); padding-top:env(safe-area-inset-top);
+}
+.hd{display:flex;align-items:center;gap:10px;padding-top:10px;padding-bottom:9px}
+.logo{flex:none;font-weight:700;font-size:16px;letter-spacing:.02em;white-space:nowrap}
+.logo span{color:var(--accent)}
+.tagline{font-size:11.5px;color:var(--muted);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.iconbtn{
+  border:1px solid var(--line2); background:var(--surface); color:var(--muted);
+  width:34px;height:34px;border-radius:9px;font-size:15px;cursor:pointer;flex:none;
+}
+.iconbtn:active{transform:scale(.95)}
+
+/* ---------- phase banner ---------- */
+.phase{
+  margin:12px 0 0; background:var(--accent-soft); border:1px solid transparent;
+  border-radius:var(--radius); padding:12px 14px;
+}
+.phase-top{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.phase-day{font-size:20px;font-weight:700;color:var(--accent-ink);letter-spacing:.01em}
+.phase-of{font-size:12px;color:var(--accent-ink);opacity:.8}
+.phase-msg{font-size:12.5px;color:var(--accent-ink);margin-top:3px;line-height:1.5}
+.bar{height:6px;border-radius:99px;background:rgba(127,127,127,.18);margin-top:9px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .4s ease}
+
+/* ---------- date nav ---------- */
+.datenav{display:flex;align-items:center;gap:8px;margin:14px 0 10px}
+.datenav button{
+  border:1px solid var(--line2);background:var(--surface);color:var(--text);
+  height:38px;min-width:38px;border-radius:10px;font-size:15px;cursor:pointer;
+}
+.datenav button:disabled{opacity:.35;cursor:default}
+.datelabel{flex:1;text-align:center;font-weight:600;font-size:15px}
+.datelabel small{display:block;font-weight:400;font-size:11px;color:var(--muted);margin-top:-2px}
+.today-btn{font-size:12px!important;padding:0 10px;color:var(--accent-ink)!important;background:var(--accent-soft)!important;border-color:transparent!important}
+
+/* ---------- cards ---------- */
+.card{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:14px; margin-bottom:12px; box-shadow:var(--shadow);
+}
+.card>h2{
+  margin:0 0 11px; font-size:13px; font-weight:700; letter-spacing:.04em;
+  color:var(--muted); display:flex; align-items:center; gap:7px;
+}
+.card>h2 em{font-style:normal;font-size:14px;opacity:.9}
+.card>h2 .hint{margin-left:auto;font-weight:400;font-size:11px;color:var(--faint);letter-spacing:0}
+.sub{font-size:11.5px;color:var(--muted);margin:-4px 0 10px;line-height:1.5}
+
+/* ---------- fields ---------- */
+.row{display:flex;gap:9px}
+.row>*{flex:1;min-width:0}
+label.f{display:block}
+label.f>span{display:block;font-size:11.5px;color:var(--muted);margin-bottom:4px}
+input[type=number],input[type=text],input[type=time],input[type=date],textarea,select{
+  width:100%; border:1px solid var(--line2); background:var(--surface2); color:var(--text);
+  border-radius:10px; padding:9px 11px; font-size:16px; font-family:inherit;
+  -webkit-appearance:none; appearance:none;
+}
+input[type=time]{min-height:40px}
+textarea{resize:vertical;min-height:64px;line-height:1.6}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px;background:var(--surface)}
+.unit{position:relative}
+.unit>b{
+  position:absolute;right:11px;top:50%;transform:translateY(-50%);
+  font-size:11px;font-weight:500;color:var(--faint);pointer-events:none;
+}
+.unit input{padding-right:34px}
+
+/* ---------- rating / segmented ---------- */
+.rate{display:flex;gap:5px}
+.rate button{
+  flex:1; border:1px solid var(--line2); background:var(--surface2); color:var(--muted);
+  height:42px; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer;
+  font-family:inherit; transition:transform .08s ease;
+}
+.rate button:active{transform:scale(.94)}
+.rate button.on{color:var(--on-ink);border-color:var(--accent);box-shadow:inset 0 0 0 2px var(--accent);font-weight:700}
+.rate button.on[data-v="1"]{background:var(--l1)}
+.rate button.on[data-v="2"]{background:var(--l2)}
+.rate button.on[data-v="3"]{background:var(--l3)}
+.rate button.on[data-v="4"]{background:var(--l4)}
+.rate button.on[data-v="5"]{background:var(--l5)}
+.rate.warm{--l1:var(--rw1);--l2:var(--rw2);--l3:var(--rw3);--l4:var(--rw4);--l5:var(--rw5)}
+.rate.good{--l1:var(--rg1);--l2:var(--rg2);--l3:var(--rg3);--l4:var(--rg4);--l5:var(--rg5)}
+.rate-ends{display:flex;justify-content:space-between;font-size:10.5px;color:var(--faint);margin-top:5px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{
+  border:1px solid var(--line2); background:var(--surface2); color:var(--muted);
+  padding:8px 14px; border-radius:99px; font-size:13px; cursor:pointer; font-family:inherit;
+}
+.seg button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+:root[data-theme="dark"] .seg button.on{color:#12201c}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .seg button.on{color:#12201c}}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+.tags button{
+  border:1px dashed var(--line2);background:transparent;color:var(--muted);
+  padding:5px 10px;border-radius:99px;font-size:12px;cursor:pointer;font-family:inherit;
+}
+.tags button:active{background:var(--surface2)}
+
+/* stepper */
+.stepper{display:flex;align-items:center;gap:0;border:1px solid var(--line2);border-radius:10px;overflow:hidden;background:var(--surface2)}
+.stepper button{flex:none;width:44px;height:42px;border:0;background:transparent;color:var(--text);font-size:19px;cursor:pointer;font-family:inherit}
+.stepper button:active{background:var(--line)}
+.stepper .val{flex:1;text-align:center;font-size:16px;font-weight:600}
+.stepper .val.empty{color:var(--faint);font-weight:400;font-size:13px}
+
+/* meals */
+.meal{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.meal .mk{
+  flex:none;width:34px;height:34px;border-radius:9px;background:var(--surface2);
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--muted);
+}
+.meal input[type=time]{flex:none;width:98px;font-size:14px;padding:8px}
+.meal input[type=text]{flex:1;font-size:14px;padding:8px 10px}
+
+/* photo */
+.photo-slot{
+  border:1px dashed var(--line2); border-radius:12px; min-height:132px;
+  display:flex; align-items:center; justify-content:center; flex-direction:column; gap:6px;
+  color:var(--faint); font-size:12.5px; cursor:pointer; overflow:hidden; position:relative;
+  background:var(--surface2);
+}
+.photo-slot img{width:100%;display:block;object-fit:contain;max-height:340px}
+.photo-slot .big{font-size:24px}
+.photo-actions{display:flex;gap:8px;margin-top:8px}
+.photo-actions button{
+  flex:1;border:1px solid var(--line2);background:var(--surface2);color:var(--muted);
+  padding:8px;border-radius:9px;font-size:12.5px;cursor:pointer;font-family:inherit;
+}
+
+/* progress ring */
+.prog{display:flex;align-items:center;gap:12px}
+.prog .ring{flex:none;width:52px;height:52px}
+.prog-txt b{font-size:14px}
+.prog-txt div{font-size:11.5px;color:var(--muted)}
+
+/* ---------- charts ---------- */
+.chart{width:100%;height:auto;display:block;overflow:visible}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.chart .axis{fill:var(--faint);font-size:9px}
+.chart .dot{fill:var(--accent);opacity:.42}
+.chart .ma{fill:none;stroke:var(--accent);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.chart .raw{fill:none;stroke:var(--accent);stroke-width:1;opacity:.3}
+.chart.warm .dot{fill:var(--warm)} .chart.warm .ma{stroke:var(--warm)} .chart.warm .raw{stroke:var(--warm)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:4px}
+
+/* heatmap */
+.heat{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -4px;padding:0 4px}
+.heat table{border-collapse:separate;border-spacing:2px;width:100%}
+.heat th{
+  font-size:11px;font-weight:500;color:var(--muted);text-align:left;white-space:nowrap;
+  padding-right:6px;width:1%;
+}
+.heat td{padding:0}
+.heat .c{height:20px;border-radius:4px;background:var(--h1);min-width:9px}
+.heat .warm .c[data-v="1"]{background:var(--h1)} .heat .warm .c[data-v="2"]{background:var(--h2)}
+.heat .warm .c[data-v="3"]{background:var(--h3)} .heat .warm .c[data-v="4"]{background:var(--h4)}
+.heat .warm .c[data-v="5"]{background:var(--h5)}
+.heat .good .c[data-v="1"]{background:var(--g1)} .heat .good .c[data-v="2"]{background:var(--g2)}
+.heat .good .c[data-v="3"]{background:var(--g3)} .heat .good .c[data-v="4"]{background:var(--g4)}
+.heat .good .c[data-v="5"]{background:var(--g5)}
+.heat .c.none{background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+.heatscale{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--faint);margin-top:9px}
+.heatscale i{width:15px;height:11px;border-radius:3px;display:inline-block}
+
+/* ---------- stats ---------- */
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+@media(min-width:480px){.stats{grid-template-columns:repeat(3,1fr)}}
+.stat{background:var(--surface2);border-radius:11px;padding:10px 11px}
+.stat .k{font-size:10.5px;color:var(--muted);letter-spacing:.02em}
+.stat .v{font-size:19px;font-weight:700;line-height:1.3;margin-top:1px}
+.stat .v small{font-size:11px;font-weight:500;color:var(--muted);margin-left:2px}
+.stat .d{font-size:10.5px;color:var(--faint);margin-top:1px}
+
+/* ---------- insights ---------- */
+.ins{border-left:3px solid var(--accent);background:var(--surface2);border-radius:0 11px 11px 0;padding:11px 13px;margin-bottom:9px}
+.ins .t{font-size:14px;font-weight:600;line-height:1.55}
+.ins .d{font-size:11.5px;color:var(--muted);margin-top:5px;line-height:1.6}
+.ins .n{font-size:10.5px;color:var(--faint);margin-top:4px}
+.ins.weak{border-left-color:var(--line2)}
+details.more{margin-top:2px}
+details.more>summary{
+  cursor:pointer;list-style:none;font-size:12.5px;color:var(--accent-ink);
+  padding:9px 2px;text-align:center;border-radius:9px;background:var(--surface2);
+}
+details.more>summary::-webkit-details-marker{display:none}
+details.more[open]>summary{margin-bottom:9px}
+.empty{color:var(--muted);font-size:13px;text-align:center;padding:22px 10px;line-height:1.7}
+.empty .big{font-size:26px;display:block;margin-bottom:6px;opacity:.55}
+
+/* lever */
+.lever{background:var(--warm-soft);border-radius:12px;padding:13px 14px;margin-top:4px}
+.lever .lb{font-size:10.5px;letter-spacing:.08em;color:var(--warm);font-weight:700}
+.lever .lt{font-size:16px;font-weight:700;margin:4px 0 5px;line-height:1.5}
+.lever .ld{font-size:12px;color:var(--muted);line-height:1.6}
+
+/* photo grid */
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.pgrid .cell{position:relative;aspect-ratio:3/4;border-radius:9px;overflow:hidden;background:var(--surface2);cursor:pointer;border:2px solid transparent}
+.pgrid .cell img{width:100%;height:100%;object-fit:cover;display:block}
+.pgrid .cell .dt{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(0,0,0,.65));color:#fff;font-size:10px;padding:10px 5px 3px;text-align:center}
+.pgrid .cell.sel{border-color:var(--accent)}
+.pgrid .cell .badge{position:absolute;top:4px;left:4px;background:var(--accent);color:#fff;font-size:10px;font-weight:700;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.compare figure{margin:0}
+.compare img{width:100%;border-radius:9px;display:block;background:var(--surface2)}
+.compare figcaption{font-size:11px;color:var(--muted);text-align:center;margin-top:5px}
+
+/* list */
+.dlist .item{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--line);cursor:pointer}
+.dlist .item:last-child{border-bottom:0}
+.dlist .dd{font-size:13px;font-weight:600;width:74px;flex:none}
+.dlist .dd small{display:block;font-weight:400;font-size:10px;color:var(--faint)}
+.dlist .dots{display:flex;gap:3px;flex:1;flex-wrap:wrap}
+.dlist .dots i{width:7px;height:7px;border-radius:50%;background:var(--line2)}
+.dlist .dots i.f{background:var(--accent)}
+.dlist .ww{font-size:12px;color:var(--muted);flex:none}
+
+/* buttons */
+.btn{
+  display:block;width:100%;border:0;border-radius:11px;padding:13px;
+  background:var(--accent);color:#fff;font-size:14.5px;font-weight:600;
+  cursor:pointer;font-family:inherit;
+}
+:root[data-theme="dark"] .btn{color:#10201c}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn{color:#10201c}}
+.btn.ghost{background:var(--surface2);color:var(--text);border:1px solid var(--line2)}
+.btn.danger{background:transparent;color:var(--danger);border:1px solid var(--line2)}
+.btn+.btn{margin-top:8px}
+
+/* nav */
+nav{
+  position:fixed;left:0;right:0;bottom:0;z-index:30;
+  background:var(--surface);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.navin{max-width:620px;margin:0 auto;display:flex}
+nav button{
+  flex:1;border:0;background:transparent;color:var(--faint);
+  padding:8px 2px 9px;font-size:10.5px;cursor:pointer;font-family:inherit;line-height:1.35;
+}
+nav button .ic{display:block;font-size:19px;margin-bottom:1px;filter:grayscale(1);opacity:.6}
+nav button.on{color:var(--accent);font-weight:600}
+nav button.on .ic{filter:none;opacity:1}
+
+.hidden{display:none!important}
+.toast{
+  position:fixed;left:50%;bottom:calc(80px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(10px);
+  background:var(--text);color:var(--bg);padding:9px 17px;border-radius:99px;font-size:12.5px;
+  opacity:0;pointer-events:none;transition:.24s ease;z-index:60;white-space:nowrap;
+}
+.toast.show{opacity:.96;transform:translateX(-50%) translateY(0)}
+.note{font-size:11.5px;color:var(--muted);line-height:1.7}
+.rule{border:0;border-top:1px solid var(--line);margin:14px 0}
+h3.sec{font-size:12px;letter-spacing:.05em;color:var(--muted);margin:18px 0 9px;font-weight:700}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap hd">
+    <div class="logo">現在地<span>ノート</span></div>
+    <div class="tagline">まず、何も変えずに観察。</div>
+    <button class="iconbtn" id="themeBtn" title="表示切替">◐</button>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ============ きょう ============ -->
+<section id="view-today">
+  <div class="phase" id="phaseBox">
+    <div class="phase-top">
+      <span class="phase-day" id="phaseDay">Day 1</span>
+      <span class="phase-of" id="phaseOf">／ 観察期間 14日</span>
+    </div>
+    <div class="phase-msg" id="phaseMsg">この期間は「直す」ではなく「見る」だけ。いつも通りに過ごして、そのまま記録します。</div>
+    <div class="bar"><i id="phaseBar" style="width:7%"></i></div>
+  </div>
+
+  <div class="datenav">
+    <button id="prevDay">‹</button>
+    <div class="datelabel"><span id="dateMain">8月20日(水)</span><small id="dateSub">きょう</small></div>
+    <button id="todayBtn" class="today-btn">きょう</button>
+    <button id="nextDay">›</button>
+  </div>
+
+  <div class="card">
+    <div class="prog">
+      <svg class="ring" viewBox="0 0 40 40" id="ringSvg">
+        <circle cx="20" cy="20" r="16" fill="none" stroke="var(--line)" stroke-width="4"/>
+        <circle id="ringArc" cx="20" cy="20" r="16" fill="none" stroke="var(--accent)" stroke-width="4"
+                stroke-linecap="round" stroke-dasharray="100.5" stroke-dashoffset="100.5"
+                transform="rotate(-90 20 20)"/>
+        <text x="20" y="23.5" text-anchor="middle" font-size="11" font-weight="700" fill="var(--text)" id="ringTxt">0</text>
+      </svg>
+      <div class="prog-txt">
+        <b id="progTitle">きょうの記録：0 / 12</b>
+        <div id="progSub">空欄のままでも大丈夫。分かるところだけ。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><em>⚖️</em>からだの数字 <span class="hint">朝いちばん・同じ条件で</span></h2>
+    <div class="row">
+      <label class="f"><span>体重</span><div class="unit"><input type="number" id="f_w" step="0.1" inputmode="decimal" placeholder="—"><b>kg</b></div></label>
+      <label class="f"><span>体脂肪率</span><div class="unit"><input type="number" id="f_bf" step="0.1" inputmode="decimal" placeholder="—"><b>%</b></div></label>
+    </div>
+    <div class="row" style="margin-top:9px">
+      <label class="f"><span>ウエスト（おへその高さ）</span><div class="unit"><input type="number" id="f_waist" step="0.1" inputmode="decimal" placeholder="—"><b>cm</b></div></label>
+    </div>
+    <p class="sub" style="margin:9px 0 0">体重は水分で1日±1kg動きます。日々の上下ではなく、7日平均の向きだけ見ます。</p>
+  </div>
+
+  <div class="card">
+    <h2><em>📷</em>写真 <span class="hint">同じ場所・同じ服・同じ姿勢</span></h2>
+    <div class="photo-slot" id="photoSlot">
+      <span class="big">＋</span><span>タップして撮影・選択</span>
+    </div>
+    <input type="file" id="photoInput" accept="image/*" class="hidden">
+    <div class="photo-actions hidden" id="photoActions">
+      <button id="photoChange">撮り直す</button>
+      <button id="photoDelete">削除</button>
+    </div>
+    <p class="sub" style="margin:9px 0 0">数字より正直に変化が出るのが写真です。週1回でも十分。</p>
+  </div>
+
+  <div class="card">
+    <h2><em>🍚</em>食事 <span class="hint">正直に、ざっくりで</span></h2>
+    <div class="meal"><div class="mk">朝</div><input type="time" id="f_bT"><input type="text" id="f_bM" placeholder="食べたもの"></div>
+    <div class="meal"><div class="mk">昼</div><input type="time" id="f_lT"><input type="text" id="f_lM" placeholder="食べたもの"></div>
+    <div class="meal"><div class="mk">夕</div><input type="time" id="f_dT"><input type="text" id="f_dM" placeholder="食べたもの"></div>
+    <p class="sub" style="margin:8px 0 0">量を減らす必要はありません。「いつ・何を」だけ残します。</p>
+  </div>
+
+  <div class="card">
+    <h2><em>🍫</em>間食</h2>
+    <label class="f"><span>回数</span></label>
+    <div class="stepper" id="snackStep">
+      <button data-s="-1">−</button><div class="val empty" id="snackVal">未記入</div><button data-s="1">＋</button>
+    </div>
+    <label class="f" style="margin-top:9px"><span>内容・時間帯</span><input type="text" id="f_snackM" placeholder="15時ごろ チョコ2個 など"></label>
+  </div>
+
+  <div class="card">
+    <h2><em>😴</em>睡眠 <span class="hint">ゆうべ</span></h2>
+    <div class="row">
+      <label class="f"><span>就寝</span><input type="time" id="f_bed"></label>
+      <label class="f"><span>起床</span><input type="time" id="f_wake"></label>
+      <label class="f"><span>睡眠時間</span><div class="unit"><input type="text" id="f_sleepH" readonly placeholder="—" style="background:transparent;border-style:dashed"></div></label>
+    </div>
+    <label class="f" style="margin-top:11px"><span>眠りの質</span></label>
+    <div class="rate good" data-field="sleepQ"></div>
+    <div class="rate-ends"><span>1 ぐっすりでない</span><span>熟睡できた 5</span></div>
+  </div>
+
+  <div class="card">
+    <h2><em>🚶</em>運動・活動</h2>
+    <div class="row">
+      <label class="f"><span>時間</span><div class="unit"><input type="number" id="f_exMin" step="5" inputmode="numeric" placeholder="—"><b>分</b></div></label>
+      <label class="f" style="flex:2"><span>内容</span><input type="text" id="f_exM" placeholder="ウォーキング など"></label>
+    </div>
+    <div class="tags" id="exTags">
+      <button>ウォーキング</button><button>ストレッチ</button><button>筋トレ</button>
+      <button>階段</button><button>家事</button><button>立ち仕事</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><em>🔋</em>疲れ</h2>
+    <div class="rate warm" data-field="fatigue"></div>
+    <div class="rate-ends"><span>1 スッキリ</span><span>ぐったり 5</span></div>
+  </div>
+
+  <div class="card">
+    <h2><em>🚽</em>お通じ</h2>
+    <div class="seg" data-field="poop" data-opts="1:あった|0:なかった"></div>
+    <div id="poopTypeWrap" class="hidden" style="margin-top:10px">
+      <label class="f"><span>状態</span></label>
+      <div class="seg" data-field="poopType" data-opts="c:コロコロ|n:ふつう|s:やわらかい|w:ゆるい"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><em>💧</em>むくみ</h2>
+    <div class="rate warm" data-field="swell"></div>
+    <div class="rate-ends"><span>1 なし</span><span>パンパン 5</span></div>
+  </div>
+
+  <div class="card">
+    <h2><em>🍰</em>甘いものが欲しい気持ち</h2>
+    <div class="rate warm" data-field="sweet"></div>
+    <div class="rate-ends"><span>1 まったく</span><span>我慢できない 5</span></div>
+  </div>
+
+  <div class="card">
+    <h2><em>🍽️</em>空腹感 <span class="hint">1日を通して</span></h2>
+    <div class="rate warm" data-field="hunger"></div>
+    <div class="rate-ends"><span>1 感じない</span><span>ずっと空腹 5</span></div>
+  </div>
+
+  <div class="card">
+    <h2><em>✍️</em>ひとこと</h2>
+    <textarea id="f_note" placeholder="出来事、気分、体調など（任意）"></textarea>
+  </div>
+
+  <p class="note" style="text-align:center;padding:4px 0 18px">
+    入力は自動で保存されます。データはこの端末の中だけに保存され、どこにも送信されません。
+  </p>
+</section>
+
+<!-- ============ ふりかえり ============ -->
+<section id="view-trend" class="hidden">
+  <div class="datenav" style="margin-top:14px">
+    <div class="seg" id="rangeSeg" style="flex:1">
+      <button data-r="7">7日</button><button data-r="14" class="on">14日</button>
+      <button data-r="30">30日</button><button data-r="0">全部</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><em>📊</em>現在地サマリー</h2>
+    <div class="stats" id="statBox"></div>
+  </div>
+
+  <div class="card">
+    <h2><em>⚖️</em>体重 <span class="hint">太線 = 7日平均</span></h2>
+    <div id="wChart"></div>
+    <div class="legend"><span><i style="background:var(--accent)"></i>7日平均</span><span><i style="background:var(--accent);opacity:.35"></i>毎日の値</span></div>
+  </div>
+
+  <div class="card">
+    <h2><em>📏</em>ウエスト</h2>
+    <div id="waistChart"></div>
+  </div>
+
+  <div class="card">
+    <h2><em>🌡️</em>からだの声 <span class="hint">濃いほど強い</span></h2>
+    <div class="heat" id="heatBox"></div>
+    <div class="heatscale">
+      <span>弱い</span>
+      <i style="background:var(--h1)"></i><i style="background:var(--h2)"></i><i style="background:var(--h3)"></i><i style="background:var(--h4)"></i><i style="background:var(--h5)"></i>
+      <span>強い</span>
+      <span style="margin-left:auto">睡眠の質は 濃い＝良い</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><em>💡</em>あなたのパターン</h2>
+    <p class="sub">記録どうしの関係を自動で探します。数が少ないうちは出ません。</p>
+    <div id="insightBox"></div>
+  </div>
+
+  <div class="card" id="leverCard">
+    <h2><em>🎯</em>次の一手</h2>
+    <div id="leverBox"></div>
+  </div>
+
+  <div class="card">
+    <h2><em>📅</em>曜日のクセ</h2>
+    <div id="dowBox"></div>
+  </div>
+</section>
+
+<!-- ============ 写真 ============ -->
+<section id="view-photo" class="hidden">
+  <div class="card" style="margin-top:14px">
+    <h2><em>🖼️</em>見比べる <span class="hint">2枚えらぶ</span></h2>
+    <div id="compareBox"></div>
+  </div>
+  <div class="card">
+    <h2><em>📷</em>すべての写真 <span id="photoCount" class="hint"></span></h2>
+    <div class="pgrid" id="photoGrid"></div>
+    <div class="empty hidden" id="photoEmpty"><span class="big">📷</span>まだ写真がありません。<br>「きょう」の画面から1枚目を残しましょう。</div>
+  </div>
+</section>
+
+<!-- ============ きろく ============ -->
+<section id="view-data" class="hidden">
+  <div class="card" style="margin-top:14px">
+    <h2><em>📖</em>観察のルール</h2>
+    <p class="note">
+      ① <b>まず14日間、何も変えない。</b>いつも通りに食べて、いつも通りに過ごす。<br>
+      ② 記録は<b>正直に</b>。良く見せる記録には価値がありません。<br>
+      ③ 空欄があってもいい。<b>途切れても、翌日また書く</b>のが成功の条件。<br>
+      ④ 14日たったら「あなたのパターン」を見て、<b>変えるのは1つだけ</b>。<br>
+      ⑤ その1つを2週間続け、また観察する。これを繰り返します。
+    </p>
+  </div>
+
+  <div class="card">
+    <h2><em>⚙️</em>設定</h2>
+    <div class="row">
+      <label class="f"><span>観察をはじめた日</span><input type="date" id="s_start"></label>
+      <label class="f"><span>観察日数</span><div class="unit"><input type="number" id="s_days" step="1" inputmode="numeric"><b>日</b></div></label>
+    </div>
+    <div class="row" style="margin-top:9px">
+      <label class="f"><span>身長（BMI計算用・任意）</span><div class="unit"><input type="number" id="s_height" step="0.1" inputmode="decimal" placeholder="—"><b>cm</b></div></label>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><em>🗂️</em>記録一覧 <span id="dayCount" class="hint"></span></h2>
+    <div class="dlist" id="dayList"></div>
+    <div class="empty hidden" id="listEmpty"><span class="big">🗒️</span>まだ記録がありません。</div>
+  </div>
+
+  <div class="card">
+    <h2><em>💾</em>バックアップ</h2>
+    <p class="sub">データはこの端末のブラウザ内だけにあります。消えると戻せません。ときどき書き出してください。</p>
+    <button class="btn ghost" id="exportBtn">ファイルに書き出す</button>
+    <button class="btn ghost" id="copyBtn">クリップボードにコピー</button>
+    <button class="btn ghost" id="importBtn">ファイルから読み込む</button>
+    <input type="file" id="importInput" accept="application/json,.json" class="hidden">
+    <hr class="rule">
+    <p class="note" id="storageInfo"></p>
+    <button class="btn danger" id="resetBtn" style="margin-top:10px">すべてのデータを消す</button>
+  </div>
+
+  <p class="note" style="text-align:center;padding:4px 0 18px">
+    現在地ノート — 体重・体重計の数字は健康のごく一部です。<br>体調に不安があるときは医療者に相談してください。
+  </p>
+</section>
+
+</main>
+
+<nav>
+  <div class="navin">
+    <button data-v="today" class="on"><span class="ic">✏️</span>きょう</button>
+    <button data-v="trend"><span class="ic">📈</span>ふりかえり</button>
+    <button data-v="photo"><span class="ic">🖼️</span>写真</button>
+    <button data-v="data"><span class="ic">🗂️</span>きろく</button>
+  </div>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* =========================================================
+   保存
+   ========================================================= */
+const KEY = "genzaichi.v1";
+const DEFAULT_DB = { version:1, settings:{ start:null, days:14, height:null }, days:{} };
+let DB = loadDB();
+
+function loadDB(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(!raw) return JSON.parse(JSON.stringify(DEFAULT_DB));
+    const o = JSON.parse(raw);
+    o.settings = Object.assign({}, DEFAULT_DB.settings, o.settings||{});
+    o.days = o.days||{};
+    return o;
+  }catch(e){
+    console.warn("読み込み失敗", e);
+    return JSON.parse(JSON.stringify(DEFAULT_DB));
+  }
+}
+let saveTimer=null;
+function save(quiet){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>{
+    try{
+      localStorage.setItem(KEY, JSON.stringify(DB));
+      if(!quiet) toast("保存しました");
+    }catch(e){
+      toast("保存できません（容量オーバー）");
+      alert("保存容量がいっぱいです。\n「きろく」画面からデータを書き出して、古い写真を削除してください。");
+    }
+  }, 220);
+}
+
+/* =========================================================
+   日付ユーティリティ
+   ========================================================= */
+const WD = ["日","月","火","水","木","金","土"];
+const pad = n => String(n).padStart(2,"0");
+const fmtD = d => d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+function parseD(s){ const p=s.split("-").map(Number); return new Date(p[0],p[1]-1,p[2]); }
+function addDays(s,n){ const d=parseD(s); d.setDate(d.getDate()+n); return fmtD(d); }
+function diffDays(a,b){ return Math.round((parseD(b)-parseD(a))/86400000); }
+const TODAY = fmtD(new Date());
+function labelD(s){ const d=parseD(s); return (d.getMonth()+1)+"月"+d.getDate()+"日("+WD[d.getDay()]+")"; }
+function shortD(s){ const d=parseD(s); return (d.getMonth()+1)+"/"+d.getDate(); }
+
+/* =========================================================
+   1日のデータ
+   ========================================================= */
+let cur = TODAY;
+function day(d, create){
+  if(!DB.days[d]){ if(!create) return {}; DB.days[d] = {}; }
+  return DB.days[d];
+}
+function setF(field, val){
+  const r = day(cur, true);
+  if(val===null || val===undefined || val===""){ delete r[field]; }
+  else { r[field] = val; }
+  if(Object.keys(r).length===0) delete DB.days[cur];
+  save(true);
+  refreshProgress();
+}
+function getF(field){ const r = day(cur); return r[field]; }
+
+/* 睡眠時間（分） */
+function sleepMinutes(r){
+  if(!r || !r.bed || !r.wake) return null;
+  const [bh,bm]=r.bed.split(":").map(Number);
+  const [wh,wm]=r.wake.split(":").map(Number);
+  let mins = (wh*60+wm) - (bh*60+bm);
+  if(mins <= 0) mins += 24*60;
+  if(mins > 16*60) return null;
+  return mins;
+}
+function fmtHM(mins){
+  if(mins==null) return "—";
+  return Math.floor(mins/60)+"時間"+(mins%60?pad(mins%60)+"分":"");
+}
+/* 夕食の遅さ（18:00 を 0 とした分） */
+function dinnerLate(r){
+  if(!r || !r.dT) return null;
+  const [h,m] = r.dT.split(":").map(Number);
+  let v = h*60+m;
+  if(v < 6*60) v += 24*60;        // 深夜は翌日扱い
+  return v - 18*60;
+}
+
+/* =========================================================
+   入力UIの組み立て
+   ========================================================= */
+function buildRates(){
+  document.querySelectorAll(".rate[data-field]").forEach(el=>{
+    el.innerHTML = "";
+    for(let v=1; v<=5; v++){
+      const b = document.createElement("button");
+      b.type="button"; b.dataset.v=v; b.textContent=v;
+      b.addEventListener("click", ()=>{
+        const f = el.dataset.field;
+        const now = getF(f);
+        setF(f, now===v ? null : v);
+        paintRate(el);
+      });
+      el.appendChild(b);
+    }
+  });
+  document.querySelectorAll(".seg[data-field]").forEach(el=>{
+    el.innerHTML = "";
+    el.dataset.opts.split("|").forEach(pair=>{
+      const i = pair.indexOf(":");
+      const v = pair.slice(0,i), label = pair.slice(i+1);
+      const b = document.createElement("button");
+      b.type="button"; b.dataset.v=v; b.textContent=label;
+      b.addEventListener("click", ()=>{
+        const f = el.dataset.field;
+        const raw = getF(f);
+        const nv = (String(raw)===v) ? null : (/^\d+$/.test(v)? Number(v) : v);
+        setF(f, nv);
+        paintSeg(el);
+        if(f==="poop") syncPoop();
+      });
+      el.appendChild(b);
+    });
+  });
+}
+function paintRate(el){
+  const v = getF(el.dataset.field);
+  el.querySelectorAll("button").forEach(b=> b.classList.toggle("on", Number(b.dataset.v)===v));
+}
+function paintSeg(el){
+  const v = getF(el.dataset.field);
+  el.querySelectorAll("button").forEach(b=> b.classList.toggle("on", v!==undefined && String(v)===b.dataset.v));
+}
+function syncPoop(){
+  document.getElementById("poopTypeWrap").classList.toggle("hidden", getF("poop")!==1);
+}
+
+/* テキスト/数値フィールドの紐づけ */
+const TEXT_FIELDS = [
+  ["f_w","w","num"],["f_bf","bf","num"],["f_waist","waist","num"],
+  ["f_bT","bT","str"],["f_bM","bM","str"],
+  ["f_lT","lT","str"],["f_lM","lM","str"],
+  ["f_dT","dT","str"],["f_dM","dM","str"],
+  ["f_snackM","snackM","str"],
+  ["f_bed","bed","str"],["f_wake","wake","str"],
+  ["f_exMin","exMin","num"],["f_exM","exM","str"],
+  ["f_note","note","str"]
+];
+function bindFields(){
+  TEXT_FIELDS.forEach(([id,field,type])=>{
+    const el = document.getElementById(id);
+    el.addEventListener("input", ()=>{
+      const raw = el.value.trim();
+      if(raw===""){ setF(field, null); }
+      else if(type==="num"){
+        const n = parseFloat(raw);
+        setF(field, isNaN(n)? null : n);
+      } else setF(field, raw);
+      if(field==="bed" || field==="wake") paintSleep();
+    });
+  });
+
+  /* 間食ステッパー */
+  document.getElementById("snackStep").addEventListener("click", e=>{
+    const b = e.target.closest("button"); if(!b) return;
+    const step = Number(b.dataset.s);
+    let v = getF("snackN");
+    v = (v===undefined) ? (step>0?1:0) : v+step;
+    if(v<0) v=0; if(v>15) v=15;
+    setF("snackN", v);
+    paintSnack();
+  });
+
+  /* 運動タグ */
+  document.getElementById("exTags").addEventListener("click", e=>{
+    const b = e.target.closest("button"); if(!b) return;
+    const el = document.getElementById("f_exM");
+    const parts = el.value.split(/[、,\s]+/).filter(Boolean);
+    const t = b.textContent;
+    const i = parts.indexOf(t);
+    if(i>=0) parts.splice(i,1); else parts.push(t);
+    el.value = parts.join("、");
+    setF("exM", el.value || null);
+  });
+
+  /* 写真 */
+  const slot = document.getElementById("photoSlot");
+  const input = document.getElementById("photoInput");
+  slot.addEventListener("click", ()=> input.click());
+  document.getElementById("photoChange").addEventListener("click", ()=> input.click());
+  document.getElementById("photoDelete").addEventListener("click", ()=>{
+    if(!confirm("この日の写真を削除しますか？")) return;
+    setF("photo", null); paintPhoto(); save();
+  });
+  input.addEventListener("change", ()=>{
+    const f = input.files && input.files[0];
+    if(!f) return;
+    compressImage(f, dataUrl=>{
+      setF("photo", dataUrl); paintPhoto(); save();
+    });
+    input.value = "";
+  });
+
+  document.getElementById("prevDay").addEventListener("click", ()=> gotoDate(addDays(cur,-1)));
+  document.getElementById("nextDay").addEventListener("click", ()=> gotoDate(addDays(cur,1)));
+  document.getElementById("todayBtn").addEventListener("click", ()=> gotoDate(TODAY));
+}
+
+function compressImage(file, cb){
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = ()=>{
+    const MAX = 560;
+    let w = img.naturalWidth, h = img.naturalHeight;
+    const s = Math.min(1, MAX/Math.max(w,h));
+    w = Math.max(1, Math.round(w*s)); h = Math.max(1, Math.round(h*s));
+    const c = document.createElement("canvas");
+    c.width = w; c.height = h;
+    c.getContext("2d").drawImage(img, 0, 0, w, h);
+    URL.revokeObjectURL(url);
+    cb(c.toDataURL("image/jpeg", 0.7));
+  };
+  img.onerror = ()=>{ URL.revokeObjectURL(url); toast("画像を読み込めませんでした"); };
+  img.src = url;
+}
+
+/* =========================================================
+   きょうの画面を描く
+   ========================================================= */
+function paintSleep(){
+  const r = day(cur);
+  document.getElementById("f_sleepH").value = fmtHM(sleepMinutes(r));
+}
+function paintSnack(){
+  const v = getF("snackN");
+  const el = document.getElementById("snackVal");
+  if(v===undefined){ el.textContent="未記入"; el.classList.add("empty"); }
+  else { el.textContent = v+" 回"; el.classList.remove("empty"); }
+}
+function paintPhoto(){
+  const p = getF("photo");
+  const slot = document.getElementById("photoSlot");
+  const acts = document.getElementById("photoActions");
+  if(p){
+    slot.innerHTML = "";
+    const img = new Image(); img.src = p; img.alt = "この日の写真";
+    slot.appendChild(img);
+    slot.style.borderStyle = "solid";
+    acts.classList.remove("hidden");
+  }else{
+    slot.innerHTML = '<span class="big">＋</span><span>タップして撮影・選択</span>';
+    slot.style.borderStyle = "dashed";
+    acts.classList.add("hidden");
+  }
+}
+function paintToday(){
+  const r = day(cur);
+  TEXT_FIELDS.forEach(([id,field])=>{
+    const el = document.getElementById(id);
+    el.value = (r[field]===undefined || r[field]===null) ? "" : r[field];
+  });
+  document.querySelectorAll(".rate[data-field]").forEach(paintRate);
+  document.querySelectorAll(".seg[data-field]").forEach(paintSeg);
+  syncPoop(); paintSleep(); paintSnack(); paintPhoto();
+
+  document.getElementById("dateMain").textContent = labelD(cur);
+  const dd = diffDays(cur, TODAY);
+  document.getElementById("dateSub").textContent =
+    dd===0 ? "きょう" : dd===1 ? "きのう" : dd>0 ? dd+"日前" : Math.abs(dd)+"日後";
+  document.getElementById("nextDay").disabled = (cur >= TODAY);
+  document.getElementById("todayBtn").classList.toggle("hidden", cur===TODAY);
+  refreshProgress();
+  paintPhase();
+}
+
+/* 12項目の記入チェック */
+const CATS = [
+  ["体重・体脂肪", r => r.w!==undefined || r.bf!==undefined],
+  ["ウエスト",     r => r.waist!==undefined],
+  ["写真",         r => !!r.photo],
+  ["食事",         r => !!(r.bM||r.lM||r.dM||r.bT||r.lT||r.dT)],
+  ["間食",         r => r.snackN!==undefined],
+  ["睡眠",         r => !!(r.bed && r.wake)],
+  ["運動",         r => r.exMin!==undefined || !!r.exM],
+  ["疲れ",         r => r.fatigue!==undefined],
+  ["お通じ",       r => r.poop!==undefined],
+  ["むくみ",       r => r.swell!==undefined],
+  ["甘いもの欲求", r => r.sweet!==undefined],
+  ["空腹感",       r => r.hunger!==undefined]
+];
+function filledCount(r){ return CATS.reduce((n,[,fn])=> n + (fn(r)?1:0), 0); }
+function refreshProgress(){
+  const r = day(cur);
+  const n = filledCount(r);
+  const total = CATS.length;
+  document.getElementById("progTitle").textContent = "きょうの記録：" + n + " / " + total;
+  const arc = document.getElementById("ringArc");
+  const C = 2*Math.PI*16;
+  arc.setAttribute("stroke-dasharray", C.toFixed(1));
+  arc.setAttribute("stroke-dashoffset", (C*(1-n/total)).toFixed(1));
+  document.getElementById("ringTxt").textContent = n;
+  const missing = CATS.filter(([,fn])=> !fn(r)).map(([name])=>name);
+  document.getElementById("progSub").textContent =
+    n===0 ? "空欄のままでも大丈夫。分かるところだけ。" :
+    n===total ? "全部そろいました。よく見ていますね。" :
+    "あと：" + missing.slice(0,3).join("・") + (missing.length>3 ? " ほか" : "");
+}
+
+/* 観察フェーズ */
+function startDate(){
+  if(DB.settings.start) return DB.settings.start;
+  const ks = Object.keys(DB.days).sort();
+  return ks.length ? ks[0] : TODAY;
+}
+function paintPhase(){
+  const st = startDate();
+  const total = Math.max(1, Number(DB.settings.days)||14);
+  const n = Math.max(1, diffDays(st, TODAY)+1);
+  const done = Object.keys(DB.days).filter(d => filledCount(DB.days[d])>0).length;
+  document.getElementById("phaseDay").textContent = "Day " + n;
+  document.getElementById("phaseOf").textContent  = "／ 観察期間 " + total + "日（記録 " + done + "日分）";
+  document.getElementById("phaseBar").style.width = Math.min(100, n/total*100) + "%";
+  const msg = document.getElementById("phaseMsg");
+  if(n < total){
+    msg.textContent = "この期間は「直す」ではなく「見る」だけ。いつも通りに過ごして、そのまま記録します。";
+  }else{
+    msg.innerHTML = "観察期間が終わりました。<b>「ふりかえり」であなたのパターンを確認</b>し、変えるのは1つだけにします。";
+  }
+}
+function gotoDate(d){
+  if(d > TODAY) return;
+  cur = d;
+  paintToday();
+  window.scrollTo({top:0, behavior:"instant"});
+}
+
+/* =========================================================
+   分析
+   ========================================================= */
+function derive(){
+  return Object.keys(DB.days).sort().map(k=>{
+    const r = DB.days[k];
+    const sm = sleepMinutes(r);
+    return {
+      date:k, raw:r,
+      w: num(r.w), bf:num(r.bf), waist:num(r.waist),
+      sleep: sm==null? null : sm/60,
+      sleepQ: num(r.sleepQ),
+      ex: r.exMin===undefined ? null : num(r.exMin),
+      snack: r.snackN===undefined ? null : num(r.snackN),
+      fatigue:num(r.fatigue), swell:num(r.swell), sweet:num(r.sweet), hunger:num(r.hunger),
+      poop: r.poop===undefined ? null : num(r.poop),
+      dinner: dinnerLate(r),
+      wd: parseD(k).getDay()
+    };
+  });
+}
+function num(v){ return (v===undefined||v===null||v==="") ? null : Number(v); }
+function avg(a){ return a.length ? a.reduce((s,v)=>s+v,0)/a.length : null; }
+
+function rangeDays(){
+  const r = Number(document.querySelector("#rangeSeg button.on").dataset.r);
+  const ks = Object.keys(DB.days).sort();
+  if(!ks.length) return [];
+  if(r===0){
+    const out=[]; let d = ks[0];
+    while(d <= TODAY){ out.push(d); d = addDays(d,1); }
+    return out;
+  }
+  const out=[];
+  for(let i=r-1;i>=0;i--) out.push(addDays(TODAY,-i));
+  return out;
+}
+
+/* 2群比較 */
+function splitCompare(pairs, min){
+  min = min||3;
+  if(pairs.length < min*2) return null;
+  const xs = pairs.map(p=>p.x).slice().sort((a,b)=>a-b);
+  const med = xs[Math.floor(xs.length/2)];
+  const tries = [
+    [p=>p.x<med, p=>p.x>med],
+    [p=>p.x<=med, p=>p.x>med],
+    [p=>p.x<med, p=>p.x>=med]
+  ];
+  for(const [fLo,fHi] of tries){
+    const lo = pairs.filter(fLo), hi = pairs.filter(fHi);
+    if(lo.length>=min && hi.length>=min){
+      const loM = avg(lo.map(p=>p.y)), hiM = avg(hi.map(p=>p.y));
+      return {
+        loN:lo.length, hiN:hi.length, loMean:loM, hiMean:hiM,
+        diff: hiM-loM, med,
+        loX: avg(lo.map(p=>p.x)), hiX: avg(hi.map(p=>p.x))
+      };
+    }
+  }
+  return null;
+}
+function makePairs(getX, getY, lag){
+  const D = derive(), byDate={};
+  D.forEach(d=> byDate[d.date]=d);
+  const out=[];
+  D.forEach(d=>{
+    const t = lag ? byDate[addDays(d.date, lag)] : d;
+    if(!t) return;
+    const x = getX(d), y = getY(t, d);
+    if(x===null || y===null || x===undefined || y===undefined) return;
+    if(isNaN(x) || isNaN(y)) return;
+    out.push({x,y});
+  });
+  return out;
+}
+
+const n1 = v => v.toFixed(1);
+const kg = v => (v>=0?"+":"") + v.toFixed(2) + "kg";
+
+/* 調べる関係のリスト */
+const RULES = [
+  { id:"sleep_sweet",
+    x:d=>d.sleep, y:t=>t.sweet, lag:0, thr:0.6,
+    tell:r=> r.diff<0
+      ? "よく眠れた日は、甘いものが欲しくなりにくい"
+      : "よく眠れた日のほうが、甘いものが欲しくなっています",
+    detail:r=> "睡眠 "+n1(r.hiX)+"時間の日：甘いもの欲求 "+n1(r.hiMean)+" ／ "+n1(r.loX)+"時間の日："+n1(r.loMean),
+    lever:"寝る時間を30分だけ早める", when:r=>r.diff<0 },
+
+  { id:"sleep_fatigue",
+    x:d=>d.sleep, y:t=>t.fatigue, lag:0, thr:0.6,
+    tell:r=> r.diff<0 ? "睡眠が短い日は、疲れが強く出ている" : "睡眠が長い日のほうが、疲れが強く出ています",
+    detail:r=> "睡眠 "+n1(r.hiX)+"時間の日：疲れ "+n1(r.hiMean)+" ／ "+n1(r.loX)+"時間の日："+n1(r.loMean),
+    lever:"寝る時間を30分だけ早める", when:r=>r.diff<0 },
+
+  { id:"sleep_hunger",
+    x:d=>d.sleep, y:t=>t.hunger, lag:0, thr:0.6,
+    tell:r=> r.diff<0 ? "寝不足の日は、空腹感が強くなりやすい" : "睡眠が長い日のほうが、空腹感が強く出ています",
+    detail:r=> "睡眠 "+n1(r.hiX)+"時間の日：空腹感 "+n1(r.hiMean)+" ／ "+n1(r.loX)+"時間の日："+n1(r.loMean),
+    lever:"寝る時間を30分だけ早める", when:r=>r.diff<0 },
+
+  { id:"fatigue_sweet",
+    x:d=>d.fatigue, y:t=>t.sweet, lag:0, thr:0.6,
+    tell:r=> r.diff>0 ? "疲れた日ほど、甘いものが欲しくなる" : "疲れが軽い日のほうが、甘いものが欲しくなっています",
+    detail:r=> "疲れが強い日：甘いもの欲求 "+n1(r.hiMean)+" ／ 疲れが軽い日："+n1(r.loMean),
+    lever:"「甘いものが欲しい」と思ったら、まず5分休む・座る", when:r=>r.diff>0 },
+
+  { id:"sweet_snack",
+    x:d=>d.sweet, y:t=>t.snack, lag:0, thr:0.7,
+    tell:r=> r.diff>0 ? "甘いもの欲求が強い日は、間食が実際に増えている" : "甘いもの欲求が弱い日のほうが、間食が多くなっています",
+    detail:r=> "欲求が強い日：間食 "+n1(r.hiMean)+"回 ／ 弱い日："+n1(r.loMean)+"回",
+    lever:"間食は「時間と場所を決めて1回だけ」にする", when:r=>r.diff>0 },
+
+  { id:"hunger_snack",
+    x:d=>d.hunger, y:t=>t.snack, lag:0, thr:0.7,
+    tell:r=> r.diff>0 ? "空腹感が強い日は、間食が増えている" : "空腹感が弱い日のほうが、間食が多くなっています",
+    detail:r=> "空腹が強い日：間食 "+n1(r.hiMean)+"回 ／ 弱い日："+n1(r.loMean)+"回",
+    lever:"毎食に、たんぱく質のおかずを1品足す", when:r=>r.diff>0 },
+
+  { id:"snack_weight",
+    x:d=>d.snack, y:(t,d)=> (t.w!==null && d.w!==null) ? t.w-d.w : null, lag:1, thr:0.25,
+    tell:r=> r.diff>0 ? "間食が多い日は、翌朝の体重が増えやすい" : "間食が少ない日のほうが、翌朝の体重が増えています",
+    detail:r=> "間食が多い日の翌朝："+kg(r.hiMean)+" ／ 少ない日の翌朝："+kg(r.loMean),
+    lever:"間食は「時間と場所を決めて1回だけ」にする", when:r=>r.diff>0 },
+
+  { id:"dinner_weight",
+    x:d=>d.dinner, y:(t,d)=> (t.w!==null && d.w!==null) ? t.w-d.w : null, lag:1, thr:0.25,
+    tell:r=> r.diff>0 ? "夕食が遅い日は、翌朝の体重が落ちにくい" : "夕食が早い日のほうが、翌朝の体重が増えています",
+    detail:r=> "夕食が遅い日の翌朝："+kg(r.hiMean)+" ／ 早い日の翌朝："+kg(r.loMean),
+    lever:"夕食を30分だけ早める", when:r=>r.diff>0 },
+
+  { id:"dinner_swell",
+    x:d=>d.dinner, y:t=>t.swell, lag:1, thr:0.6,
+    tell:r=> r.diff>0 ? "夕食が遅い日は、翌日のむくみが強い" : "夕食が早い日の翌日のほうが、むくみが強く出ています",
+    detail:r=> "夕食が遅い日の翌日：むくみ "+n1(r.hiMean)+" ／ 早い日の翌日："+n1(r.loMean),
+    lever:"夕食を30分だけ早める", when:r=>r.diff>0 },
+
+  { id:"ex_sleepq",
+    x:d=>d.ex, y:t=>t.sleepQ, lag:1, thr:0.6,
+    tell:r=> r.diff>0 ? "からだを動かした日は、その夜よく眠れている" : "動いた日の夜のほうが、眠りの質が下がっています",
+    detail:r=> "動いた日の夜：眠りの質 "+n1(r.hiMean)+" ／ 動かなかった日："+n1(r.loMean),
+    lever:"毎日10分だけ歩く時間をつくる", when:r=>r.diff>0 },
+
+  { id:"ex_fatigue",
+    x:d=>d.ex, y:t=>t.fatigue, lag:1, thr:0.6,
+    tell:r=> r.diff<0 ? "からだを動かした日の翌日は、疲れが軽い" : "運動した翌日は、疲れが強めに出ています",
+    detail:r=> "動いた日の翌日：疲れ "+n1(r.hiMean)+" ／ 動かなかった日の翌日："+n1(r.loMean),
+    lever:"毎日10分だけ歩く時間をつくる", when:r=>r.diff<0 },
+
+  { id:"poop_swell",
+    x:d=>d.poop, y:t=>t.swell, lag:0, thr:0.6,
+    tell:r=> r.diff<0 ? "お通じがあった日は、むくみが軽い" : "お通じがなかった日のほうが、むくみが軽く出ています",
+    detail:r=> "あった日：むくみ "+n1(r.hiMean)+" ／ なかった日："+n1(r.loMean),
+    lever:"朝起きたらコップ1杯の水＋食物繊維を1品", when:r=>r.diff<0 },
+
+  { id:"swell_weight",
+    x:d=>d.swell, y:(t,d)=> (t.w!==null && d.w!==null) ? d.w-t.w : null, lag:-1, thr:0.25,
+    tell:r=> r.diff>0 ? "むくみが強い日は、体重も重く出ている（脂肪ではなく水分です）" : "むくみが軽い日のほうが、体重が増えています",
+    detail:r=> "むくみが強い日の前日比："+kg(r.hiMean)+" ／ 軽い日："+kg(r.loMean),
+    lever:"体重が増えた日は、まずむくみを疑って落ち込まない", when:r=>true }
+];
+
+function computeInsights(){
+  const out = [];
+  RULES.forEach(rule=>{
+    const pairs = makePairs(rule.x, rule.y, rule.lag);
+    const res = splitCompare(pairs, 3);
+    if(!res) return;
+    if(Math.abs(res.diff) < rule.thr) return;
+    out.push({
+      id: rule.id,
+      title: rule.tell(res),
+      detail: rule.detail(res),
+      n: res.loN + res.hiN,
+      strength: Math.abs(res.diff)/rule.thr,
+      lever: rule.when(res) ? rule.lever : null
+    });
+  });
+  out.sort((a,b)=> b.strength - a.strength);
+  return out;
+}
+
+/* 曜日のクセ */
+function dowStats(){
+  const D = derive();
+  const keys = [["sweet","甘いもの欲求"],["snack","間食回数"],["fatigue","疲れ"]];
+  const rows = [];
+  keys.forEach(([k,label])=>{
+    const byWd = Array.from({length:7},()=>[]);
+    D.forEach(d=>{ if(d[k]!==null) byWd[d.wd].push(d[k]); });
+    const all = D.map(d=>d[k]).filter(v=>v!==null);
+    if(all.length < 7) return;
+    const base = avg(all);
+    let best = null;
+    byWd.forEach((vals,wd)=>{
+      if(vals.length < 2) return;
+      const m = avg(vals);
+      if(best===null || Math.abs(m-base) > Math.abs(best.m-base)) best = {wd, m, n:vals.length};
+    });
+    if(best && Math.abs(best.m-base) >= 0.5){
+      rows.push({
+        label,
+        text: WD[best.wd]+"曜日は "+label+" が平均 "+n1(best.m)+"（ふだん "+n1(base)+"）",
+        up: best.m > base, n: best.n
+      });
+    }
+  });
+  return rows;
+}
+
+/* =========================================================
+   グラフ
+   ========================================================= */
+function lineChart(host, dates, values, opts){
+  opts = opts||{};
+  const pts = dates.map((d,i)=>({d, v:values[i]})).filter(p=>p.v!==null && p.v!==undefined);
+  if(pts.length < 2){
+    host.innerHTML = '<div class="empty"><span class="big">📈</span>'+(opts.emptyMsg||"2日分以上たまるとグラフが出ます。")+'</div>';
+    return;
+  }
+  const W=360, H=170, L=36, R=8, T=12, B=24;
+  const iw = W-L-R, ih = H-T-B;
+  const vals = pts.map(p=>p.v);
+  let min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
+  let padv = (max-min)*0.18 || Math.max(0.5, Math.abs(max)*0.01);
+  min -= padv; max += padv;
+  const n = dates.length;
+  const X = i => L + (n===1 ? iw/2 : iw*i/(n-1));
+  const Y = v => T + ih*(1-(v-min)/(max-min));
+
+  /* 7日移動平均 */
+  const ma = dates.map((d,i)=>{
+    const win = [];
+    for(let j=Math.max(0,i-6); j<=i; j++){
+      const v = values[j];
+      if(v!==null && v!==undefined) win.push(v);
+    }
+    return win.length>=3 ? avg(win) : null;
+  });
+
+  let svg = '<svg class="chart '+(opts.warm?"warm":"")+'" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+(opts.aria||"推移グラフ")+'">';
+  [0,0.5,1].forEach(t=>{
+    const y = T+ih*t;
+    svg += '<line class="grid" x1="'+L+'" y1="'+y.toFixed(1)+'" x2="'+(W-R)+'" y2="'+y.toFixed(1)+'"/>';
+    const v = max-(max-min)*t;
+    svg += '<text class="axis" x="'+(L-5)+'" y="'+(y+3).toFixed(1)+'" text-anchor="end">'+v.toFixed(1)+'</text>';
+  });
+  /* 生データの線 */
+  let raw = "", started=false;
+  dates.forEach((d,i)=>{
+    const v = values[i];
+    if(v===null||v===undefined){ started=false; return; }
+    raw += (started?"L":"M") + X(i).toFixed(1) + " " + Y(v).toFixed(1) + " ";
+    started = true;
+  });
+  svg += '<path class="raw" d="'+raw+'"/>';
+  /* 移動平均 */
+  let mp = "", st2=false;
+  ma.forEach((v,i)=>{
+    if(v===null){ st2=false; return; }
+    mp += (st2?"L":"M") + X(i).toFixed(1) + " " + Y(v).toFixed(1) + " ";
+    st2 = true;
+  });
+  if(mp) svg += '<path class="ma" d="'+mp+'"/>';
+  /* 点 */
+  dates.forEach((d,i)=>{
+    const v = values[i];
+    if(v===null||v===undefined) return;
+    svg += '<circle class="dot" cx="'+X(i).toFixed(1)+'" cy="'+Y(v).toFixed(1)+'" r="2.6"/>';
+  });
+  /* x軸 */
+  const marks = n<=1 ? [0] : [0, Math.floor((n-1)/2), n-1];
+  marks.forEach((i,k)=>{
+    svg += '<text class="axis" x="'+X(i).toFixed(1)+'" y="'+(H-7)+'" text-anchor="'+(k===0?"start":k===2?"end":"middle")+'">'+shortD(dates[i])+'</text>';
+  });
+  svg += '</svg>';
+  host.innerHTML = svg;
+}
+
+const HEAT_ROWS = [
+  ["fatigue","疲れ","warm"],
+  ["swell","むくみ","warm"],
+  ["sweet","甘いもの","warm"],
+  ["hunger","空腹感","warm"],
+  ["sleepQ","眠りの質","good"]
+];
+function paintHeat(dates){
+  const host = document.getElementById("heatBox");
+  if(!dates.length){ host.innerHTML = '<div class="empty"><span class="big">🌡️</span>記録がたまると出ます。</div>'; return; }
+  let html = '<table><tbody>';
+  HEAT_ROWS.forEach(([k,label,ramp])=>{
+    html += '<tr class="'+ramp+'"><th>'+label+'</th>';
+    dates.forEach(d=>{
+      const r = DB.days[d]||{};
+      const v = r[k];
+      html += '<td><div class="c '+(v===undefined?"none":"")+'"'+(v!==undefined?' data-v="'+v+'"':'')+' title="'+shortD(d)+(v!==undefined?" : "+v:"")+'"></div></td>';
+    });
+    html += '</tr>';
+  });
+  html += '<tr><th style="color:var(--faint)"></th>';
+  dates.forEach((d,i)=>{
+    const show = (i===0 || i===dates.length-1 || parseD(d).getDate()===1);
+    html += '<td style="font-size:9px;color:var(--faint);text-align:center;white-space:nowrap">'+(show?shortD(d):"")+'</td>';
+  });
+  html += '</tr></tbody></table>';
+  host.innerHTML = html;
+}
+
+/* =========================================================
+   ふりかえり画面
+   ========================================================= */
+function paintTrend(){
+  const dates = rangeDays();
+  const rows = dates.map(d=> DB.days[d]||{});
+
+  /* サマリー */
+  const D = derive().filter(d=> dates.indexOf(d.date)>=0);
+  const ws = D.map(d=>d.w).filter(v=>v!==null);
+  const waists = D.map(d=>d.waist).filter(v=>v!==null);
+  const sleeps = D.map(d=>d.sleep).filter(v=>v!==null);
+  const snacks = D.map(d=>d.snack).filter(v=>v!==null);
+  const exs = D.map(d=>d.ex).filter(v=>v!==null);
+  const poops = D.map(d=>d.poop).filter(v=>v!==null);
+  const recorded = D.filter(d=> filledCount(d.raw)>0).length;
+
+  const stats = [];
+  const trend = (arr)=>{
+    if(arr.length < 6) return "";
+    const h = Math.floor(arr.length/3);
+    const a = avg(arr.slice(0,h)), b = avg(arr.slice(-h));
+    const d = b-a;
+    if(Math.abs(d) < 0.15) return "ほぼ横ばい";
+    return (d<0?"▼ ":"▲ ")+Math.abs(d).toFixed(1)+" 変化";
+  };
+  stats.push(["体重 平均", ws.length? avg(ws).toFixed(1):"—", "kg", ws.length?("幅 "+(Math.max.apply(null,ws)-Math.min.apply(null,ws)).toFixed(1)+"kg / "+trend(ws)):"記録なし"]);
+  stats.push(["ウエスト 平均", waists.length? avg(waists).toFixed(1):"—", "cm", waists.length? trend(waists):"記録なし"]);
+  stats.push(["睡眠 平均", sleeps.length? avg(sleeps).toFixed(1):"—", "時間", sleeps.length? (Math.min.apply(null,sleeps).toFixed(1)+"〜"+Math.max.apply(null,sleeps).toFixed(1)+"時間"):"記録なし"]);
+  stats.push(["間食 平均", snacks.length? avg(snacks).toFixed(1):"—", "回/日", snacks.length? ("0回の日 "+snacks.filter(v=>v===0).length+"日"):"記録なし"]);
+  stats.push(["運動 合計", exs.length? String(Math.round(exs.reduce((s,v)=>s+v,0))):"—", "分", exs.length? ("動いた日 "+exs.filter(v=>v>0).length+"日"):"記録なし"]);
+  stats.push(["お通じがあった日", poops.length? String(Math.round(avg(poops)*100)):"—", "%", poops.length? (poops.filter(v=>v===1).length+" / "+poops.length+"日"):"記録なし"]);
+  const bmi = (DB.settings.height && ws.length) ? (avg(ws)/Math.pow(DB.settings.height/100,2)) : null;
+  if(bmi) stats.push(["BMI", bmi.toFixed(1), "", "身長 "+DB.settings.height+"cm"]);
+  stats.push(["記録した日", String(recorded), "日", "対象 "+dates.length+"日間"]);
+
+  document.getElementById("statBox").innerHTML = stats.map(([k,v,u,d])=>
+    '<div class="stat"><div class="k">'+k+'</div><div class="v">'+v+(u?'<small>'+u+'</small>':'')+'</div><div class="d">'+d+'</div></div>'
+  ).join("");
+
+  lineChart(document.getElementById("wChart"), dates, rows.map(r=> r.w===undefined?null:Number(r.w)), {aria:"体重の推移"});
+  lineChart(document.getElementById("waistChart"), dates, rows.map(r=> r.waist===undefined?null:Number(r.waist)), {warm:true, aria:"ウエストの推移", emptyMsg:"ウエストを2回以上はかるとグラフが出ます。"});
+  paintHeat(dates);
+
+  /* 気づき */
+  const ins = computeInsights();
+  const box = document.getElementById("insightBox");
+  if(!ins.length){
+    const nRec = Object.keys(DB.days).filter(d=>filledCount(DB.days[d])>0).length;
+    box.innerHTML = '<div class="empty"><span class="big">🔍</span>まだパターンは見えていません。<br>'+
+      (nRec<6 ? "記録が6日分ほどたまると出はじめます（いま "+nRec+"日分）。" : "いまのところ、はっきりした関係は見つかりませんでした。<br>記録を続けると変わることがあります。")+
+      '</div>';
+  }else{
+    const card = i =>
+      '<div class="ins'+(i.strength<1.4?" weak":"")+'"><div class="t">'+i.title+'</div>'+
+      '<div class="d">'+i.detail+'</div><div class="n">この比較に使った日数：'+i.n+'日</div></div>';
+    const TOP = 5;
+    let html = ins.slice(0,TOP).map(card).join("");
+    if(ins.length > TOP){
+      html += '<details class="more"><summary>ほかの気づきも見る（'+(ins.length-TOP)+'件）</summary>'+
+              ins.slice(TOP).map(card).join("") + '</details>';
+    }
+    box.innerHTML = html + '<p class="note" style="margin-top:10px">※ 統計的な証明ではなく「あなたの記録の中での傾向」です。日数が増えるほど信頼できます。</p>';
+  }
+
+  /* 次の一手 */
+  const lever = ins.find(i=>i.lever);
+  const lbox = document.getElementById("leverBox");
+  const st = startDate();
+  const dayN = Math.max(1, diffDays(st, TODAY)+1);
+  const total = Math.max(1, Number(DB.settings.days)||14);
+  if(dayN < total){
+    lbox.innerHTML = '<div class="empty"><span class="big">🔒</span>観察期間の途中です（Day '+dayN+' / '+total+'）。<br>いまは何も変えず、記録だけ続けます。<br>終わったら、ここに「変えること」が1つ出ます。</div>';
+  }else if(!lever){
+    lbox.innerHTML = '<div class="empty"><span class="big">🎯</span>まだ「これ」という一手が決まりません。<br>記録を続けるか、空欄の多い項目を埋めてみてください。</div>';
+  }else{
+    lbox.innerHTML =
+      '<div class="lever"><div class="lb">NEXT ACTION — たった1つだけ</div>'+
+      '<div class="lt">'+lever.lever+'</div>'+
+      '<div class="ld">理由：'+lever.title+'<br>これを2週間つづけて、また観察します。<br>同時に2つ以上変えると、何が効いたのか分からなくなります。</div></div>'+
+      '<p class="note" style="margin-top:10px">できた／できなかったも、そのまま記録に残してください。</p>';
+  }
+
+  /* 曜日 */
+  const dows = dowStats();
+  document.getElementById("dowBox").innerHTML = dows.length
+    ? dows.map(r=> '<div class="ins'+(r.up?"":" weak")+'"><div class="t" style="font-size:13.5px">'+r.text+'</div><div class="n">'+r.n+'日分の平均</div></div>').join("")
+    : '<div class="empty"><span class="big">📅</span>各曜日が2回ずつ以上たまると、曜日のクセが見えてきます。</div>';
+}
+
+/* =========================================================
+   写真画面
+   ========================================================= */
+let compareSel = [];
+function paintPhotos(){
+  const withPhoto = Object.keys(DB.days).filter(d=>DB.days[d].photo).sort();
+  document.getElementById("photoCount").textContent = withPhoto.length ? withPhoto.length+"枚" : "";
+  const grid = document.getElementById("photoGrid");
+  const empty = document.getElementById("photoEmpty");
+  empty.classList.toggle("hidden", withPhoto.length>0);
+  grid.innerHTML = withPhoto.slice().reverse().map(d=>{
+    const i = compareSel.indexOf(d);
+    return '<div class="cell'+(i>=0?" sel":"")+'" data-d="'+d+'">'+
+      (i>=0? '<div class="badge">'+(i+1)+'</div>':'')+
+      '<img src="'+DB.days[d].photo+'" alt="'+shortD(d)+'の写真" loading="lazy">'+
+      '<div class="dt">'+shortD(d)+'</div></div>';
+  }).join("");
+
+  const cb = document.getElementById("compareBox");
+  if(withPhoto.length < 2){
+    cb.innerHTML = '<div class="empty"><span class="big">🖼️</span>写真が2枚たまると、見比べられます。</div>';
+  }else if(compareSel.length < 2){
+    const a = withPhoto[0], b = withPhoto[withPhoto.length-1];
+    cb.innerHTML = renderCompare(a,b) +
+      '<p class="note" style="margin-top:9px;text-align:center">下の一覧から2枚タップすると、その2枚を比べられます。</p>';
+  }else{
+    const [a,b] = compareSel.slice().sort();
+    cb.innerHTML = renderCompare(a,b) +
+      '<button class="btn ghost" style="margin-top:10px" id="clearCmp">選び直す</button>';
+    const cc = document.getElementById("clearCmp");
+    if(cc) cc.addEventListener("click", ()=>{ compareSel=[]; paintPhotos(); });
+  }
+}
+function renderCompare(a,b){
+  const gap = diffDays(a,b);
+  const wa = DB.days[a].w, wb = DB.days[b].w;
+  let delta = "";
+  if(wa!==undefined && wb!==undefined){
+    const d = Number(wb)-Number(wa);
+    delta = " ／ 体重 " + (d>=0?"+":"") + d.toFixed(1) + "kg";
+  }
+  return '<div class="compare">'+
+    '<figure><img src="'+DB.days[a].photo+'" alt="'+shortD(a)+'"><figcaption>'+labelD(a)+(DB.days[a].w!==undefined?'<br>'+DB.days[a].w+'kg':'')+'</figcaption></figure>'+
+    '<figure><img src="'+DB.days[b].photo+'" alt="'+shortD(b)+'"><figcaption>'+labelD(b)+(DB.days[b].w!==undefined?'<br>'+DB.days[b].w+'kg':'')+'</figcaption></figure>'+
+    '</div><p class="note" style="text-align:center;margin-top:8px">'+gap+'日間'+delta+'</p>';
+}
+
+/* =========================================================
+   きろく画面
+   ========================================================= */
+function paintData(){
+  document.getElementById("s_start").value = startDate();
+  document.getElementById("s_days").value = DB.settings.days || 14;
+  document.getElementById("s_height").value = DB.settings.height==null ? "" : DB.settings.height;
+
+  const ks = Object.keys(DB.days).filter(d=>filledCount(DB.days[d])>0).sort().reverse();
+  document.getElementById("dayCount").textContent = ks.length? ks.length+"日分" : "";
+  document.getElementById("listEmpty").classList.toggle("hidden", ks.length>0);
+  document.getElementById("dayList").innerHTML = ks.map(d=>{
+    const r = DB.days[d];
+    const n = filledCount(r);
+    let dots = "";
+    CATS.forEach(([,fn])=> dots += '<i class="'+(fn(r)?"f":"")+'"></i>');
+    return '<div class="item" data-d="'+d+'"><div class="dd">'+shortD(d)+
+      '<small>'+WD[parseD(d).getDay()]+'曜 ・ '+n+'/12</small></div>'+
+      '<div class="dots">'+dots+'</div>'+
+      '<div class="ww">'+(r.w!==undefined? r.w+"kg" : (r.photo?"📷":""))+'</div></div>';
+  }).join("");
+
+  /* 容量 */
+  let bytes = 0;
+  try{ bytes = new Blob([JSON.stringify(DB)]).size; }catch(e){ bytes = JSON.stringify(DB).length; }
+  const photos = Object.keys(DB.days).filter(d=>DB.days[d].photo).length;
+  document.getElementById("storageInfo").textContent =
+    "保存サイズ：" + (bytes/1024/1024).toFixed(2) + " MB（写真 " + photos + "枚 / 記録 " + ks.length + "日分）。" +
+    "ブラウザの上限はおおよそ5MBです。";
+}
+
+function bindData(){
+  document.getElementById("s_start").addEventListener("change", e=>{
+    DB.settings.start = e.target.value || null; save(); paintPhase();
+  });
+  document.getElementById("s_days").addEventListener("input", e=>{
+    const v = parseInt(e.target.value,10);
+    DB.settings.days = (isNaN(v)||v<1) ? 14 : v; save(true); paintPhase();
+  });
+  document.getElementById("s_height").addEventListener("input", e=>{
+    const v = parseFloat(e.target.value);
+    DB.settings.height = isNaN(v)? null : v; save(true);
+  });
+
+  document.getElementById("dayList").addEventListener("click", e=>{
+    const it = e.target.closest(".item"); if(!it) return;
+    gotoDate(it.dataset.d); switchView("today");
+  });
+
+  document.getElementById("exportBtn").addEventListener("click", ()=>{
+    const blob = new Blob([JSON.stringify(DB,null,1)], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "genzaichi-" + TODAY + ".json";
+    document.body.appendChild(a); a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    toast("書き出しました");
+  });
+  document.getElementById("copyBtn").addEventListener("click", async ()=>{
+    const txt = JSON.stringify(DB);
+    try{
+      await navigator.clipboard.writeText(txt);
+      toast("コピーしました");
+    }catch(e){
+      prompt("下のテキストを全選択してコピーしてください", txt);
+    }
+  });
+  document.getElementById("importBtn").addEventListener("click", ()=> document.getElementById("importInput").click());
+  document.getElementById("importInput").addEventListener("change", e=>{
+    const f = e.target.files && e.target.files[0]; if(!f) return;
+    const fr = new FileReader();
+    fr.onload = ()=>{
+      try{
+        const o = JSON.parse(fr.result);
+        if(!o || typeof o!=="object" || !o.days) throw new Error("形式が違います");
+        if(!confirm("いまのデータを読み込んだ内容で置き換えます。よろしいですか？")) return;
+        DB = { version:1, settings:Object.assign({}, DEFAULT_DB.settings, o.settings||{}), days:o.days };
+        save(); paintAll(); toast("読み込みました");
+      }catch(err){ alert("読み込めませんでした：" + err.message); }
+    };
+    fr.readAsText(f);
+    e.target.value = "";
+  });
+  document.getElementById("resetBtn").addEventListener("click", ()=>{
+    if(!confirm("すべての記録と写真を消します。元に戻せません。よろしいですか？")) return;
+    if(!confirm("本当に消してよいですか？（先に書き出しをおすすめします）")) return;
+    DB = JSON.parse(JSON.stringify(DEFAULT_DB));
+    localStorage.removeItem(KEY);
+    cur = TODAY; paintAll(); toast("すべて消しました");
+  });
+}
+
+/* =========================================================
+   画面切替・その他
+   ========================================================= */
+let view = "today";
+function switchView(v){
+  view = v;
+  ["today","trend","photo","data"].forEach(k=>{
+    document.getElementById("view-"+k).classList.toggle("hidden", k!==v);
+  });
+  document.querySelectorAll("nav button").forEach(b=> b.classList.toggle("on", b.dataset.v===v));
+  if(v==="trend") paintTrend();
+  if(v==="photo") paintPhotos();
+  if(v==="data") paintData();
+  window.scrollTo({top:0, behavior:"instant"});
+}
+function paintAll(){ paintToday(); if(view!=="today") switchView(view); }
+
+let toastTimer=null;
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> t.classList.remove("show"), 1500);
+}
+
+function initTheme(){
+  const saved = localStorage.getItem("genzaichi.theme");
+  if(saved) document.documentElement.setAttribute("data-theme", saved);
+  document.getElementById("themeBtn").addEventListener("click", ()=>{
+    const now = document.documentElement.getAttribute("data-theme");
+    const isDark = now ? now==="dark"
+      : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const next = isDark ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    localStorage.setItem("genzaichi.theme", next);
+  });
+}
+
+/* 起動 */
+function init(){
+  initTheme();
+  buildRates();
+  bindFields();
+  bindData();
+  document.querySelectorAll("nav button").forEach(b=>
+    b.addEventListener("click", ()=> switchView(b.dataset.v)));
+  document.getElementById("rangeSeg").addEventListener("click", e=>{
+    const b = e.target.closest("button"); if(!b) return;
+    document.querySelectorAll("#rangeSeg button").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on");
+    paintTrend();
+  });
+  document.getElementById("photoGrid").addEventListener("click", e=>{
+    const c = e.target.closest(".cell"); if(!c) return;
+    const d = c.dataset.d;
+    const i = compareSel.indexOf(d);
+    if(i>=0) compareSel.splice(i,1);
+    else { compareSel.push(d); if(compareSel.length>2) compareSel.shift(); }
+    paintPhotos();
+  });
+  if(!DB.settings.start){ DB.settings.start = TODAY; save(true); }
+  paintToday();
+}
+init();
+</script>
+</body>
+</html>
