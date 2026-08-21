@@ -12,8 +12,9 @@ import os, sys
 import qrcode
 
 url = sys.argv[1] if len(sys.argv) > 1 else sys.exit("URL を指定してください")
-qr = qrcode.QRCode(version=None, error_correction=qrcode.constants.ERROR_CORRECT_H,
-                   box_size=20, border=1)
+# 名刺の13mm四方でも読み取れるよう、誤り訂正はQ、余白（クワイエットゾーン）は2モジュール
+qr = qrcode.QRCode(version=None, error_correction=qrcode.constants.ERROR_CORRECT_Q,
+                   box_size=24, border=2)
 qr.add_data(url); qr.make(fit=True)
 img = qr.make_image(fill_color="#3E3A34", back_color="white")
 out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "qr.png")
