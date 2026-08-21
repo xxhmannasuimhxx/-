@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>髙落まどか 名刺（ミニ処方箋）</title>
+<style>
+/* ============================================================
+   名刺 ／ 髙落 まどか（スマイルおうち栄養士・管理栄養士）
+   仕上がり 91 × 55 mm ／ 塗り足し 3mm → 用紙 97 × 61 mm
+   1ページ目：表面（ネイビー＋琥珀）
+   2ページ目：裏面「おうちごはん処方箋」（その場で書き込める）
+   配色は講座スライド（build_deck.js）と同じトークンを使用
+   ============================================================ */
+:root{
+  --ink:#1E3A5F;
+  --ink-deep:#13273F;
+  --amber:#D9822B;
+  --sage:#3F8A72;
+  --card:#EFF3F7;
+  --line:#D9E2EA;
+  --gray:#5C6E80;
+  --pale:#9FB4CC;
+
+  --bleed:3mm;   /* 塗り足し */
+  --safe:7mm;    /* 用紙端からの文字の安全マージン（＝仕上がり線から4mm） */
+}
+
+@page{ size:97mm 61mm; margin:0; }
+*{ box-sizing:border-box; margin:0; padding:0; }
+
+html,body{ background:#E8EDF2; }
+body{
+  font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo","IPAPGothic","IPAGothic",sans-serif;
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  text-rendering:geometricPrecision;
+}
+
+/* ---- 用紙（塗り足し込み）---- */
+.page{
+  position:relative;
+  width:97mm; height:61mm;
+  overflow:hidden;
+  background:#fff;
+  page-break-after:always; break-after:page;
+}
+.page:last-child{ page-break-after:auto; break-after:auto; }
+
+/* 塗り足しまで届かせる装飾レイヤー */
+.deco{ position:absolute; inset:0; overflow:hidden; }
+/* 文字を置いてよい範囲 */
+.safe{ position:absolute; inset:var(--safe); }
+
+@media screen{
+  body{ padding:14mm 10mm; display:flex; flex-wrap:wrap; gap:12mm; justify-content:center; align-items:flex-start; }
+  .page{ box-shadow:0 6px 24px rgba(19,39,63,.22); }
+  .page::after{ content:""; position:absolute; inset:var(--bleed);
+    outline:.2mm dashed rgba(217,130,43,.5); pointer-events:none; }  /* 仕上がり線ガイド */
+}
+@media print{ body{ background:#fff; padding:0; } }
+
+/* ============================================================
+   表面
+   ============================================================ */
+.front{ background:var(--ink-deep); }
+.front .c-amber{ position:absolute; border-radius:50%;
+  width:40mm; height:40mm; right:-13mm; top:-15mm; background:var(--amber); }
+.front .c-ring{ position:absolute; border-radius:50%;
+  width:26mm; height:26mm; right:-7mm; bottom:-9mm; border:.5mm solid rgba(159,180,204,.28); }
+.front .c-sage{ position:absolute; border-radius:50%;
+  width:4.6mm; height:4.6mm; right:19mm; bottom:6mm; background:var(--sage); }
+
+.eyebrow{ font-size:5.6pt; font-weight:700; letter-spacing:.14em; color:var(--amber); }
+.name{ margin-top:2.4mm; font-size:20pt; font-weight:700; letter-spacing:.10em; color:#fff; line-height:1; }
+.name .sp{ display:inline-block; width:2.4mm; }
+.romaji{ margin-top:2.0mm; font-size:5pt; letter-spacing:.30em; color:var(--pale); }
+.rule{ margin-top:3.4mm; width:12mm; height:.6mm; background:var(--amber); border-radius:.3mm; }
+.copy{ margin-top:3.2mm; font-size:7.4pt; font-weight:700; color:#EAF0F7; line-height:1.5; letter-spacing:.02em; }
+.sub{ margin-top:1.8mm; font-size:5.4pt; color:var(--pale); line-height:1.6; }
+.front-foot{ position:absolute; left:0; bottom:0; }
+.front-foot .tag{ display:inline-block; padding:1mm 2.4mm; border-radius:1.4mm;
+  background:rgba(217,130,43,.18); color:#EDAF6E; font-size:5pt; font-weight:700; letter-spacing:.08em; }
+
+/* ============================================================
+   裏面（おうちごはん処方箋）
+   ============================================================ */
+.back .band{ position:absolute; left:0; right:0; top:0; height:4.6mm; background:var(--amber); }
+.back .grid{ position:absolute; inset:0;
+  background-image:linear-gradient(var(--card) .18mm,transparent .18mm),
+                   linear-gradient(90deg,var(--card) .18mm,transparent .18mm);
+  background-size:4mm 4mm; }
+
+.rx-head{ display:flex; align-items:flex-end; justify-content:space-between; }
+.rx-title{ font-size:9pt; font-weight:700; letter-spacing:.08em; color:var(--ink); line-height:1.1; }
+.rx-title small{ display:block; margin-bottom:.9mm;
+  font-size:4.8pt; font-weight:700; letter-spacing:.18em; color:var(--amber); }
+.rx-date{ font-size:4.8pt; color:var(--gray); letter-spacing:.04em; white-space:nowrap; }
+
+.rx-body{ position:absolute; left:0; right:0; top:10.5mm; bottom:8.6mm; display:flex; gap:3mm; }
+.rx-left{ flex:1 1 auto; display:flex; flex-direction:column; }
+.rx-right{ flex:0 0 16mm; display:flex; flex-direction:column; align-items:center; }
+
+.label{ font-size:4.8pt; font-weight:700; letter-spacing:.10em; color:var(--sage); }
+.checks{ margin-top:1.5mm; display:grid; grid-template-columns:repeat(3,auto); justify-content:start;
+  column-gap:3.4mm; row-gap:1.4mm; }
+.chk{ display:flex; align-items:center; gap:1mm; font-size:5pt; color:var(--ink); white-space:nowrap; }
+.chk i{ width:2mm; height:2mm; flex:0 0 2mm; border:.25mm solid #B0C0D0; border-radius:.35mm; background:#fff; }
+
+.rp{ margin-top:2.6mm; flex:1 1 auto; display:flex; gap:1.8mm; }
+.rp .mark{ font-family:Georgia,"Times New Roman",serif; font-size:11pt; font-style:italic;
+  font-weight:700; color:var(--amber); line-height:1; padding-top:.6mm; }
+.rp .lines{ flex:1 1 auto; display:flex; flex-direction:column; justify-content:space-evenly; padding-bottom:.6mm; }
+.rp .lines span{ display:block; height:0; border-bottom:.22mm dotted #A3B5C6; }
+
+.qr{ width:15mm; height:15mm; border:.25mm dashed #B0C0D0; border-radius:1mm; background:#fff;
+  display:flex; align-items:center; justify-content:center; font-size:4.4pt; color:#9AA9B8; letter-spacing:.08em; }
+.qr-cap{ margin-top:1.1mm; font-size:4.2pt; color:var(--gray); text-align:center; line-height:1.45; }
+
+.back-foot{ position:absolute; left:0; right:0; bottom:0; padding-top:1.5mm;
+  border-top:.25mm solid var(--line); display:flex; align-items:flex-end; justify-content:space-between; gap:2mm; }
+.who{ font-size:5.2pt; color:var(--gray); letter-spacing:.04em; }
+.who b{ display:inline-block; margin-right:1.4mm; font-size:6.6pt; font-weight:700; letter-spacing:.10em; color:var(--ink); }
+.contact{ font-size:4.6pt; color:var(--gray); line-height:1.6; text-align:right; letter-spacing:.02em; }
+.contact b{ color:var(--ink); font-weight:700; letter-spacing:.06em; }
+</style>
+</head>
+<body>
+
+<!-- ==================== 表面 ==================== -->
+<section class="page front">
+  <div class="deco">
+    <div class="c-amber"></div>
+    <div class="c-ring"></div>
+    <div class="c-sage"></div>
+  </div>
+  <div class="safe">
+    <div class="eyebrow">スマイルおうち栄養士 ／ 管理栄養士</div>
+    <div class="name">髙落<span class="sp"></span>まどか</div>
+    <div class="romaji">TAKAOCHI MADOKA</div>
+    <div class="rule"></div>
+    <div class="copy">おうちのごはんを、<br>もう少しラクに。</div>
+    <div class="sub">忙しい毎日でも続けられる、<br>おうちごはんの整え方をお伝えしています。</div>
+    <div class="front-foot"><span class="tag">夏休みごはん対策講座 主催</span></div>
+  </div>
+</section>
+
+<!-- ==================== 裏面 ==================== -->
+<section class="page back">
+  <div class="deco">
+    <div class="grid"></div>
+    <div class="band"></div>
+  </div>
+  <div class="safe">
+    <div class="rx-head">
+      <div class="rx-title"><small>OUCHI-GOHAN Rx</small>おうちごはん処方箋</div>
+      <div class="rx-date">　 年　 月　 日</div>
+    </div>
+
+    <div class="rx-body">
+      <div class="rx-left">
+        <div class="label">気になっていること</div>
+        <div class="checks">
+          <span class="chk"><i></i>朝ごはん</span>
+          <span class="chk"><i></i>好き嫌い</span>
+          <span class="chk"><i></i>おやつ</span>
+          <span class="chk"><i></i>夜ふかし</span>
+          <span class="chk"><i></i>お弁当</span>
+          <span class="chk"><i></i>その他</span>
+        </div>
+        <div class="rp">
+          <div class="mark">Rp.</div>
+          <div class="lines"><span></span><span></span><span></span></div>
+        </div>
+      </div>
+
+      <div class="rx-right">
+        <div class="qr">QR</div>
+        <div class="qr-cap">ご相談・<br>お申込みは<br>こちらから</div>
+      </div>
+    </div>
+
+    <div class="back-foot">
+      <div class="who"><b>髙落 まどか</b>管理栄養士</div>
+      <div class="contact">
+        <b>MAIL</b> example@example.com　<b>Instagram</b> @example<br>
+        <b>LINE</b> @example　／　example.com
+      </div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
