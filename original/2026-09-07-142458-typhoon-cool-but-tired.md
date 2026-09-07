@@ -1,5 +1,5 @@
 ---
-received_at: "2026-09-07T05:24:58Z"
+received_at: "2026-09-07T14:24:58+09:00"
 status: "raw"
 ---
 

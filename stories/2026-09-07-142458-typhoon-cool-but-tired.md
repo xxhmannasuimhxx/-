@@ -3,7 +3,7 @@ title: "涼しいのに、疲れている日"
 category: "stories"
 tags: ["台風", "疲れ", "生活リズム", "無理しない日"]
 summary: "台風で涼しくなったのに体は疲れている、という日の実感を共有し、フォロワーにも問いかけるストーリーズ。"
-source_note: "original/2026-09-07-052458-typhoon-cool-but-tired.md"
+source_note: "original/2026-09-07-142458-typhoon-cool-but-tired.md"
 status: "draft"
 ---
 

@@ -44,8 +44,15 @@ description: メモや思いつきを発信用の原稿（ネタ帳・リール�
 ## ファイルの作り方
 
 ファイル名は `YYYY-MM-DD-HHMMSS-<英小文字とハイフンのslug>.md`。
-タイムスタンプは `date +%Y-%m-%d-%H%M%S` で取る。slug は内容を表す短い英語
-（例: `summer-breakfast-rhythm`）。
+slug は内容を表す短い英語（例: `summer-breakfast-rhythm`）。
+
+**時刻は必ず日本時間で記録する。** 実行環境が UTC のことがあるので、`date` は
+そのまま使わずタイムゾーンを指定する。
+
+```bash
+TZ=Asia/Tokyo date +%Y-%m-%d-%H%M%S   # ファイル名用 → 2026-09-07-142458
+TZ=Asia/Tokyo date +%Y-%m-%dT%H:%M:%S%:z  # フロントマター用 → 2026-09-07T14:24:58+09:00
+```
 
 原稿には YAML フロントマターを付ける。
 
@@ -62,7 +69,7 @@ status: "draft"
 （本文）
 ```
 
-`original/` に置く原文には `received_at` と `status: "raw"` だけ付ければよい。
+`original/` に置く原文には `received_at`（日本時間）と `status: "raw"` だけ付ければよい。
 
 ## 保存したあと
 
