@@ -2,16 +2,11 @@
   "name": "madoka-content-system",
   "version": "1.0.0",
   "private": true,
-  "description": "LINEで届いたメモを分類して発信用の原稿に整えるシステム",
-  "main": "server.js",
+  "description": "講座スライドと発信コンテンツの原稿を管理するリポジトリ",
   "scripts": {
-    "start": "node server.js",
     "build:deck": "node build_deck.js"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.74.0",
-    "dotenv": "^17.2.3",
-    "express": "^5.1.0",
     "pptxgenjs": "^4.0.1"
   }
 }
