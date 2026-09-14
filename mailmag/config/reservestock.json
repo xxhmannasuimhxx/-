@@ -1,0 +1,29 @@
+{
+  "_comment": [
+    "リザーブストック（リザスト）は公開APIが無いため、管理画面をブラウザ操作して投稿する。",
+    "URL とセレクタは画面変更で変わるので、この JSON だけ直せば追随できるようにしている。",
+    "実際の値が分からないときは `npm run mailmag:inspect` を実行すると、",
+    "ログイン後の画面の入力欄一覧が mailmag/out/inspect/ に出力される。それを見て書き換える。"
+  ],
+  "baseUrl": "https://www.reservestock.jp",
+  "loginUrl": "https://www.reservestock.jp/login",
+  "composerUrl": "https://www.reservestock.jp/mail_magazine/create",
+  "loggedOutMarker": "input[type=password]",
+  "login": {
+    "email": ["input[name=\"email\"]", "input[name=\"login_id\"]", "input[type=\"email\"]", "#email"],
+    "password": ["input[name=\"password\"]", "input[type=\"password\"]", "#password"],
+    "submit": ["button[type=\"submit\"]", "input[type=\"submit\"]", "text=ログイン"]
+  },
+  "composer": {
+    "subject": ["input[name=\"subject\"]", "input[name=\"title\"]", "#subject", "#title"],
+    "bodyFrame": ["iframe.cke_wysiwyg_frame", "iframe[id^=\"tinymce\"]", "iframe[title*=\"エディタ\"]"],
+    "body": ["textarea[name=\"body\"]", "textarea[name=\"content\"]", "div[contenteditable=\"true\"]", "#body", "#content"],
+    "list": ["select[name=\"list_id\"]", "select[name=\"mail_magazine_id\"]"],
+    "saveDraftPattern": "下書き|一時保存|保存する|保存",
+    "sendPattern": "送信|配信|予約|申込|削除"
+  },
+  "labels": {
+    "subject": "件名|タイトル|題名",
+    "body": "本文|メール本文|内容"
+  }
+}

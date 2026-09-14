@@ -1,5 +1,16 @@
 {
+  "scripts": {
+    "deck": "node build_deck.js",
+    "mailmag": "node mailmag/src/cli.js",
+    "mailmag:list": "node mailmag/src/cli.js list",
+    "mailmag:new": "node mailmag/src/cli.js new --from-deck",
+    "mailmag:build": "node mailmag/src/cli.js build",
+    "mailmag:login": "node mailmag/src/cli.js login --headed --manual",
+    "mailmag:inspect": "node mailmag/src/cli.js inspect",
+    "mailmag:post": "node mailmag/src/cli.js post"
+  },
   "dependencies": {
+    "playwright": "^1.63.0",
     "pptxgenjs": "^4.0.1"
   }
 }
