@@ -94,7 +94,7 @@ function cmdNew(args) {
 function cmdBuild(args, { respectDate = false } = {}) {
   const draft = requireDraft(args, { respectDate });
   const composed = compose(draft);
-  composed.format = args.format || "html";
+  composed.format = args.format || "auto";   // auto: リッチエディタならHTML、ふつうの欄ならテキスト
   const files = writeOutput(composed, OUT_DIR, draft.name);
   console.log(`原稿    : ${path.relative(process.cwd(), draft.file)}`);
   console.log(`件名    : ${composed.subject}`);
@@ -134,10 +134,11 @@ async function cmdInspect(args) {
     const login = await rs.describeForm(page, "01-after-login");
     console.log(`ログイン後: ${login.info.url}`);
 
-    await page.goto(cfg.composerUrl, { waitUntil: "domcontentloaded" }).catch((e) => {
-      console.log(`! メルマガ作成画面を開けませんでした: ${e.message}`);
+    const opened = await rs.openComposer(page, cfg).catch((e) => {
+      console.log(`! ${e.message}`);
+      return null;
     });
-    await page.waitForTimeout(2000);
+    if (opened) console.log(`作成画面を開きました（${opened.how}）`);
     const composer = await rs.describeForm(page, "02-composer");
     const shots = await rs.capture(page, "02-composer");
 
@@ -168,15 +169,15 @@ async function cmdPost(args) {
   const { browser, page } = await rs.launch({ headed: !!args.headed });
   try {
     await rs.login(page, cfg);
-    await page.goto(cfg.composerUrl, { waitUntil: "domcontentloaded" });
-    await page.waitForTimeout(1500);
+    const opened = await rs.openComposer(page, cfg);
+    console.log(`· メルマガ作成画面を開きました（${opened.how}）`);
 
-    const subjectField = (await rs.firstVisible(page, cfg.composer.subject)) ||
-                         (await rs.byLabel(page, cfg.labels.subject));
-    if (!subjectField) {
-      throw new Error("件名の入力欄が見つかりません。`npm run mailmag:inspect` で確認してください。");
+    const subject = await rs.findSubject(page, cfg);
+    if (!subject) {
+      throw new Error("件名の入力欄が見つかりませんでした。`npm run mailmag:inspect` の結果を見せてください。");
     }
-    await subjectField.fill(composed.subject);
+    await subject.locator.fill(composed.subject);
+    console.log(`· 件名欄を特定（${subject.how}）`);
     console.log(`· 件名を入力: ${composed.subject}`);
 
     // 配信リストの指定（原稿の list: / 環境変数で指定されているときだけ）
@@ -228,6 +229,13 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error(`\n${err.message}`);
+  // ブラウザの内部ログまで出ると読みづらいので、最初の数行だけ見せる
+  const lines = String(err.message || err).split("\n");
+  const short = lines.slice(0, 4).join("\n");
+  console.error(`\n${short}`);
+  if (lines.length > 4) console.error("（詳しいログは省略しました）");
+  if (/Missing X server|DISPLAY/.test(err.message || "")) {
+    console.error("画面のない環境では --headed（ブラウザを表示する指定）は使えません。");
+  }
   process.exit(1);
 });

@@ -1,5 +1,6 @@
 {
   "scripts": {
+    "setup": "node mailmag/src/setup.js",
     "deck": "node build_deck.js",
     "mailmag": "node mailmag/src/cli.js",
     "mailmag:list": "node mailmag/src/cli.js list",
