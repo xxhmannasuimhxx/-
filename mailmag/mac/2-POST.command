@@ -1,13 +1,14 @@
 #!/bin/bash
-# Mac用：このファイルをダブルクリックすると、
+# Mac用（Windowsの方は1つ上のフォルダの 1-SETUP.bat / 2-POST.bat を使ってください）
+# このファイルをダブルクリックすると、
 # いちばん古い「投稿まちの原稿」をリザストに下書き保存します。
 # （配信ボタンは押しません。最後の配信はリザストの画面でご自身で押してください）
 
-cd "$(dirname "$0")/.." || exit 1
+cd "$(dirname "$0")/../.." || exit 1
 clear
 
 if ! command -v node >/dev/null 2>&1; then
-  echo "Node.js が見つかりません。先に「はじめに準備.command」を実行してください。"
+  echo "Node.js が見つかりません。先に「1-SETUP.command」を実行してください。"
   read -n 1 -s -r -p "何かキーを押すと閉じます。"
   exit 1
 fi

@@ -8,7 +8,7 @@
  *   4. ブラウザを開いて1回だけ手動ログイン → セッション保存
  *   5. メルマガ作成画面を調べて、結果を out/inspect/ に保存
  *
- * Mac は mailmag/はじめに準備.command、Windows は mailmag/はじめに準備.bat から呼ばれる。
+ * Windows は mailmag/1-SETUP.bat、Mac は mailmag/mac/1-SETUP.command から呼ばれる。
  */
 
 const fs = require("fs");
@@ -153,7 +153,7 @@ async function main() {
   say("=========================================");
   say("このあとの使い方:");
   say("  ・原稿を書く       … mailmag/drafts/ の .md ファイルを編集");
-  say("  ・下書きを投稿する … 「メルマガ投稿.command」（Windows は .bat）をダブルクリック");
+  say("  ・下書きを投稿する … mailmag フォルダの 2-POST（Mac は mac/2-POST.command）をダブルクリック");
   say("");
   say("うまくいかないときは、この画面の文字と");
   say(`  ${path.join("mailmag", "out", "inspect")} の中の画像`);

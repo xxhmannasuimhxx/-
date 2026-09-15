@@ -1,8 +1,9 @@
 #!/bin/bash
-# Mac用：このファイルをダブルクリックすると、メルマガ自動投稿の準備が始まります。
+# Mac用（Windowsの方は1つ上のフォルダの 1-SETUP.bat / 2-POST.bat を使ってください）
+# このファイルをダブルクリックすると、メルマガ自動投稿の準備が始まります。
 # （「開発元が未確認」と出たら、右クリック →「開く」を選んでください）
 
-cd "$(dirname "$0")/.." || exit 1
+cd "$(dirname "$0")/../.." || exit 1
 clear
 
 if ! command -v node >/dev/null 2>&1; then
