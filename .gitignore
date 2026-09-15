@@ -1,2 +1,6 @@
 node_modules/
 package-lock.json
+
+# 認証情報（絶対にコミットしない）
+.env
+.env.local

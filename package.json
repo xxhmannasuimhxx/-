@@ -1,4 +1,11 @@
 {
+  "name": "madoka-content-system",
+  "version": "1.0.0",
+  "private": true,
+  "description": "講座スライドと発信コンテンツの原稿を管理するリポジトリ",
+  "scripts": {
+    "build:deck": "node build_deck.js"
+  },
   "dependencies": {
     "pptxgenjs": "^4.0.1"
   }
