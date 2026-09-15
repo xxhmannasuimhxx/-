@@ -44,20 +44,28 @@ pause
 exit /b 1
 
 :CHECKNODE
-where node >nul 2>nul
-if errorlevel 1 (
-  echo.
-  echo   Node.js is required. / Node.js ga hitsuyou desu.
-  echo.
-  echo   1. The download page will open in your browser.
-  echo   2. Click the green "LTS" button and install it.
-  echo   3. Run this file again.
-  echo.
-  start "" "https://nodejs.org/ja/download"
-  pause
-  exit /b 1
-)
+set "FINDER=%~dp0find-node.bat"
+if exist "%ROOT%\mailmag\find-node.bat" set "FINDER=%ROOT%\mailmag\find-node.bat"
+call "%FINDER%"
+if errorlevel 1 goto NONODE
 
-node "%ROOT%\mailmag\src\setup.js"
+echo   Node.js: %NODEEXE%
+"%NODEEXE%" "%ROOT%\mailmag\src\setup.js"
 echo.
 pause
+exit /b 0
+
+:NONODE
+echo.
+echo   Node.js is required. / Node.js ga hitsuyou desu.
+echo.
+echo   1. The download page will open in your browser.
+echo   2. Click the green "LTS" button and install it (keep clicking Next).
+echo   3. Run this file (1-SETUP) again.
+echo.
+echo   * If you already installed it, restart the PC once and try again.
+echo     (Sudeni install zumi nara, PC wo saikidou shite mou ichido)
+echo.
+start "" "https://nodejs.org/ja/download"
+pause
+exit /b 1

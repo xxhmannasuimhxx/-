@@ -22,15 +22,16 @@ pause
 exit /b 1
 
 :CHECKNODE
-where node >nul 2>nul
+call "%~dp0find-node.bat"
 if errorlevel 1 (
   echo.
   echo   Node.js not found. Please run 1-SETUP first.
+  echo   * If you already installed it, restart the PC once and try again.
   echo.
   pause
   exit /b 1
 )
 
-node "%ROOT%\mailmag\src\cli.js" post --headed
+"%NODEEXE%" "%ROOT%\mailmag\src\cli.js" post --headed
 echo.
 pause
