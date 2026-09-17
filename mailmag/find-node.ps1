@@ -1,12 +1,16 @@
-# node.exe の場所を探して、見つかればそのパスだけを表示するスクリプト。
-# 1-SETUP.bat / 2-POST.bat から呼ばれる。見つからなければ終了コード 1。
+﻿# Finds node.exe and prints its full path. Exit code 1 when not found.
+# Called from find-node.bat.
 #
-# "where node" が失敗するケースが色々あるため、順に調べる:
-#   1. レジストリに保存されている PATH（この画面の PATH が古くても拾える）
-#   2. よくあるインストール先
-#   3. Node.js インストーラがレジストリに残す場所
-#   4. nvm / fnm / Volta などのバージョン管理ツールの置き場
-#   5. 最後の手段として、限られた範囲を再帰検索
+# NOTE: keep this file ASCII-only and saved with a UTF-8 BOM.
+# Windows PowerShell 5.1 reads BOM-less files as ANSI (cp932 on Japanese
+# systems), which turns non-ASCII comments into parse errors.
+#
+# Search order:
+#   1. PATH as stored in the registry (works even if this window is stale)
+#   2. usual install folders
+#   3. registry entries written by the Node.js installer
+#   4. version managers (nvm / fnm / Volta)
+#   5. last resort: shallow recursive search
 
 $ErrorActionPreference = 'SilentlyContinue'
 
@@ -21,13 +25,13 @@ function Test-NodeExe($dir) {
 
 $dirs = New-Object System.Collections.ArrayList
 
-# 1. レジストリ上の PATH
+# 1. PATH from the registry
 foreach ($scope in @('Machine', 'User')) {
     $value = [Environment]::GetEnvironmentVariable('Path', $scope)
     if ($value) { foreach ($p in $value.Split(';')) { [void]$dirs.Add($p) } }
 }
 
-# 2. よくあるインストール先
+# 2. usual install folders
 foreach ($base in @($env:ProgramFiles, $env:ProgramW6432, ${env:ProgramFiles(x86)})) {
     if ($base) { [void]$dirs.Add((Join-Path $base 'nodejs')) }
 }
@@ -35,7 +39,7 @@ foreach ($base in @($env:ProgramFiles, $env:ProgramW6432, ${env:ProgramFiles(x86
 [void]$dirs.Add((Join-Path $env:LOCALAPPDATA 'Volta\bin'))
 [void]$dirs.Add('C:\nodejs')
 
-# 3. インストーラが残すレジストリの情報
+# 3. registry entries left by the installer
 foreach ($key in @('HKLM:\SOFTWARE\Node.js', 'HKLM:\SOFTWARE\WOW6432Node\Node.js')) {
     $install = (Get-ItemProperty -Path $key).InstallPath
     if ($install) { [void]$dirs.Add($install) }
@@ -49,7 +53,7 @@ foreach ($root in @('HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*
     }
 }
 
-# 4. バージョン管理ツール（新しいものから）
+# 4. version managers, newest first
 foreach ($vm in @((Join-Path $env:APPDATA 'nvm'),
                   (Join-Path $env:LOCALAPPDATA 'fnm_multishells'),
                   (Join-Path $env:LOCALAPPDATA 'fnm\node-versions'),
@@ -65,7 +69,7 @@ foreach ($dir in $dirs) {
     if ($exe) { Write-Output $exe; exit 0 }
 }
 
-# 5. 最後の手段：限られた範囲だけ探す
+# 5. last resort
 foreach ($root in @($env:ProgramFiles, $env:LOCALAPPDATA, $env:APPDATA, $env:USERPROFILE)) {
     if (-not $root) { continue }
     $hit = Get-ChildItem -LiteralPath $root -Filter 'node.exe' -Recurse -Depth 3 -File |
