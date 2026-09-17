@@ -14,6 +14,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const { spawn } = require("child_process");
 const { pickDraft, listDrafts, markPosted, DRAFT_DIR } = require("./draft");
 const { compose, writeOutput } = require("./compose");
 const { deckToMarkdown } = require("./deckSource");
@@ -68,6 +69,17 @@ async function requireDraft(args, { respectDate = true } = {}) {
     );
   }
   return draft;
+}
+
+/** 調べた結果のフォルダを開く（うまくいかなかったときの手がかり用） */
+function openFolder(dir) {
+  if (!fs.existsSync(dir)) return;
+  const opener = process.platform === "win32" ? "explorer"
+    : process.platform === "darwin" ? "open" : "xdg-open";
+  try {
+    spawn(opener, [dir], { detached: true, stdio: "ignore" }).unref();
+    console.log(`調べた結果のフォルダを開きました: ${dir}`);
+  } catch { /* 開けなくても支障はない */ }
 }
 
 // ---------- コマンド ----------
@@ -154,6 +166,7 @@ async function cmdInspect(args) {
       return null;
     });
     if (opened) console.log(`作成画面を開きました（${opened.how}）`);
+    if (!opened) openFolder(path.join(rs.OUT_DIR, "inspect"));
     const composer = await rs.describeForm(page, "02-composer");
     const shots = await rs.capture(page, "02-composer");
 
