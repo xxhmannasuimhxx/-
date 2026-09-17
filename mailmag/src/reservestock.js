@@ -12,10 +12,10 @@
 const fs = require("fs");
 const path = require("path");
 const { chromium } = require("playwright");
+const { ENV_FILE, AUTH_FILE } = require("./paths");
 
 const ROOT = path.join(__dirname, "..");
 const CONFIG_FILE = path.join(ROOT, "config", "reservestock.json");
-const AUTH_FILE = process.env.RESERVESTOCK_AUTH_FILE || path.join(ROOT, ".auth", "reservestock.json");
 const OUT_DIR = path.join(ROOT, "out");
 
 function loadConfig() {
@@ -32,16 +32,16 @@ function credentials() {
   const password = process.env.RESERVESTOCK_PASSWORD;
   if (!email || !password) {
     throw new Error(
-      "RESERVESTOCK_EMAIL / RESERVESTOCK_PASSWORD が未設定です。\n" +
-      "  ローカル: mailmag/.env に書く（.env は git 管理外）\n" +
-      "  CI      : GitHub Secrets に登録する"
+      "リザストのログイン情報が未設定です。\n" +
+      `  設定ファイル: ${ENV_FILE}\n` +
+      "  1-SETUP をもう一度実行すると入力し直せます。"
     );
   }
   return { email, password };
 }
 
 /** .env を読み込む（依存を増やさないための最小実装） */
-function loadDotEnv(file = path.join(ROOT, ".env")) {
+function loadDotEnv(file = ENV_FILE) {
   if (!fs.existsSync(file)) return;
   for (const line of fs.readFileSync(file, "utf8").split(/\r?\n/)) {
     const m = /^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.*)$/i.exec(line);

@@ -58,8 +58,13 @@ cp mailmag/.env.example mailmag/.env
 # mailmag/.env にリザストのログインID（メールアドレス）とパスワードを書く
 ```
 
-`mailmag/.env` と保存されたログインセッション（`mailmag/.auth/`）は
-`.gitignore` 済みなので、GitHub には上がりません。
+ログイン情報と、保存されたログインセッションは、このフォルダの中ではなく
+ユーザー領域に保存されます（ZIPを入れ直しても消えません）。
+
+- Windows : `%APPDATA%\mailmag-tool\`
+- Mac     : `~/Library/Application Support/mailmag-tool/`
+
+いずれもリポジトリの外なので、GitHub には上がりません。
 
 ## 使い方
 
@@ -130,7 +135,7 @@ npm run mailmag:new -- --slides 20-26 --name 秋バテ --date 2026-09-21
 - **配信ボタンは押しません。** 押すのは `saveDraftPattern` に一致し、かつ
   `sendPattern`（送信・配信・予約・削除）に一致しないボタンだけです。
   最終的な配信は、リザストの画面でご自身で確認してから押してください。
-- パスワードはコードに書かず `.env`（または CI の Secrets）から読みます。
+- パスワードはコードに書かず、ユーザー領域の `.env`（`%APPDATA%\mailmag-tool\.env` など）から読みます。
 - 実行のたびに入力直前・保存後のスクリーンショットを `mailmag/out/inspect/` に残すので、
   あとから「何が入力されたか」を確認できます。
 

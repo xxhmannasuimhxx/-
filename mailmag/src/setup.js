@@ -15,21 +15,42 @@ const fs = require("fs");
 const path = require("path");
 const readline = require("readline");
 const { spawnSync } = require("child_process");
+const { ENV_FILE } = require("./paths");
 
 const ROOT = path.join(__dirname, "..");        // mailmag/
 const REPO = path.join(ROOT, "..");             // リポジトリ直下
-const ENV_FILE = path.join(ROOT, ".env");
 const CLI = path.join(__dirname, "cli.js");
 
 const say = (msg = "") => console.log(msg);
 const step = (n, msg) => say(`\n[${n}/5] ${msg}`);
 
-function run(command, args, opts = {}) {
-  const result = spawnSync(command, args, {
+/**
+ * 子プロセスの実行。
+ *
+ * Windows で shell:true を使うと "C:\Program Files\nodejs\node.exe" のような
+ * 空白入りのパスが途中で切れてしまうため、
+ *   ・node 自体は shell なしで直接起動する
+ *   ・npm / npx は .cmd を引用符付きの1行コマンドとして渡す
+ * という形にしている。
+ */
+function runNode(args) {
+  const result = spawnSync(process.execPath, args, { stdio: "inherit", cwd: REPO });
+  return result.status === 0;
+}
+
+function runTool(tool, args) {
+  const isWin = process.platform === "win32";
+  if (!isWin) {
+    const result = spawnSync(tool, args, { stdio: "inherit", cwd: REPO });
+    return result.status === 0;
+  }
+  // node.exe と同じフォルダにある npm.cmd / npx.cmd を使う
+  const exe = path.join(path.dirname(process.execPath), `${tool}.cmd`);
+  const command = fs.existsSync(exe) ? `"${exe}"` : tool;
+  const result = spawnSync(`${command} ${args.join(" ")}`, {
     stdio: "inherit",
     cwd: REPO,
-    shell: process.platform === "win32",
-    ...opts,
+    shell: true,
   });
   return result.status === 0;
 }
@@ -69,7 +90,7 @@ function ensureDependencies() {
     return true;
   } catch {
     say("  インストールします（数分かかることがあります）");
-    return run("npm", ["install"]);
+    return runTool("npm", ["install"]);
   }
 }
 
@@ -87,7 +108,7 @@ function ensureBrowser() {
     /* 下でインストールする */
   }
   say("  ダウンロードします（初回だけ・数分かかります）");
-  return run("npx", ["playwright", "install", "chromium"]);
+  return runTool("npx", ["playwright", "install", "chromium"]);
 }
 
 // ---------- 3. ログイン情報 ----------
@@ -95,7 +116,7 @@ async function ensureEnv() {
   step(3, "リザーブストックのログイン情報を確認しています…");
   const current = fs.existsSync(ENV_FILE) ? fs.readFileSync(ENV_FILE, "utf8") : "";
   if (/^RESERVESTOCK_EMAIL=.+$/m.test(current) && /^RESERVESTOCK_PASSWORD=.+$/m.test(current)) {
-    say(`  保存済みです（${path.relative(REPO, ENV_FILE)}）。OK`);
+    say(`  保存済みです（${ENV_FILE}）。OK`);
     return;
   }
   say("  リザストにログインするときの情報を入力してください。");
@@ -104,6 +125,7 @@ async function ensureEnv() {
   const email = await ask("  メールアドレス（ログインID）: ");
   const password = email ? await ask("  パスワード（画面には表示されません）: ", { hidden: true }) : "";
 
+  fs.mkdirSync(path.dirname(ENV_FILE), { recursive: true });
   fs.writeFileSync(
     ENV_FILE,
     [
@@ -114,7 +136,7 @@ async function ensureEnv() {
     ].join("\n"),
     { mode: 0o600 }
   );
-  say(`  保存しました: ${path.relative(REPO, ENV_FILE)}`);
+  say(`  保存しました: ${ENV_FILE}`);
 }
 
 // ---------- 4. 手動ログイン ----------
@@ -122,13 +144,13 @@ function doLogin() {
   step(4, "ブラウザを開きます。出てきた画面でリザストにログインしてください。");
   say("  ・自動でログインできることもあります。その場合はそのままお待ちください。");
   say("  ・ログインし終わったら、この黒い画面に戻って Enter キーを押してください。");
-  return run(process.execPath, [CLI, "login", "--headed", "--manual"]);
+  return runNode([CLI, "login", "--headed", "--manual"]);
 }
 
 // ---------- 5. 画面しらべ ----------
 function doInspect() {
   step(5, "メルマガ作成画面のつくりを調べています…");
-  return run(process.execPath, [CLI, "inspect"]);
+  return runNode([CLI, "inspect"]);
 }
 
 function fail(message) {
