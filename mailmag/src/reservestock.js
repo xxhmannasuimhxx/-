@@ -309,54 +309,96 @@ async function fillBody(page, cfg, composed) {
 /**
  * テンプレート選択の画面を通過する。
  *
- * リザストのメルマガ作成は「テンプレートを選ぶ」→「本文を書く」の2段階。
- * 設定の composer.template（名前）を優先し、無ければ templatePreferred の
- * 並び順（使わない・白紙・シンプル…）で選ぶ。どれも無ければ最初の候補。
+ * リザストのメルマガ作成は「テンプレートを選ぶ」→「本文を書く」の2段階で、
+ * テンプレートを選んだ時点で、その回のメルマガ（edit_html/<番号>）が作られる。
+ * 選択の形式は画面によって違うため、次の順に試す。
+ *   1. ラジオボタン（＋「作成」などのボタン）
+ *   2. リンク・ボタン・画像などのクリック（最大3つまで試す）
+ * 設定の composer.template（名前）があればそれを優先する。
  */
-async function passTemplateStep(page, cfg) {
-  const choices = await page.evaluate(() => {
-    const clickable = [...document.querySelectorAll(
-      'a, button, input[type="submit"], input[type="button"], input[type="image"], [role="button"]'
-    )];
-    return clickable
+async function passTemplateStep(page, cfg, hasSubject) {
+  // あとで確認できるように、選択画面そのものを残す
+  await capture(page, "02a-template").catch(() => {});
+  await describeForm(page, "02a-template").catch(() => {});
+
+  const wanted = cfg.composer.template || "";
+  const preferred = (cfg.composer.templatePreferred || "").split("|").filter(Boolean);
+  const startUrl = page.url();
+
+  /** 候補の並べ替え（指定名 → 優先語 → 元の順） */
+  const rank = (label) => {
+    if (wanted && label.includes(wanted)) return -1000;
+    const hit = preferred.findIndex((word) => label.includes(word));
+    return hit >= 0 ? hit : 500;
+  };
+
+  // ---- 1. ラジオボタン形式 ----
+  const radios = await page.evaluate(() => {
+    return [...document.querySelectorAll('input[type="radio"]')].map((el, i) => {
+      const label = [
+        el.labels && el.labels[0] && el.labels[0].innerText,
+        el.closest("label") && el.closest("label").innerText,
+        el.closest("li, td, div") && el.closest("li, td, div").innerText,
+        el.value,
+      ].filter(Boolean).join(" ").replace(/\s+/g, " ").trim().slice(0, 60);
+      return { index: i, label };
+    });
+  });
+
+  if (radios.length) {
+    const pick = [...radios].sort((a, b) => rank(a.label) - rank(b.label))[0];
+    await page.locator('input[type="radio"]').nth(pick.index).check({ timeout: 5000 }).catch(() => {});
+    const submit = page.getByRole("button", { name: /作成|決定|次へ|進む|選択|開始|作る/ }).first();
+    if (await submit.count().catch(() => 0)) {
+      await submit.click({ timeout: 8000 }).catch(() => {});
+    } else {
+      await page.locator('input[type="submit"]').first().click({ timeout: 5000 }).catch(() => {});
+    }
+    await page.waitForLoadState("domcontentloaded").catch(() => {});
+    await page.waitForTimeout(1500);
+    if (await hasSubject()) return `ラジオボタン「${pick.label || "（名前なし）"}」`;
+  }
+
+  // ---- 2. リンク・ボタン形式 ----
+  const selector = 'a, button, input[type="submit"], input[type="button"], input[type="image"], [role="button"], [onclick]';
+  const choices = await page.evaluate((sel) => {
+    return [...document.querySelectorAll(sel)]
       .map((el, index) => {
         const rect = el.getBoundingClientRect();
         const image = el.querySelector && el.querySelector("img");
         const label = [
           el.innerText, el.value, el.getAttribute("title"), el.getAttribute("alt"),
           image && image.getAttribute("alt"), image && image.getAttribute("title"),
-        ].filter(Boolean).join(" ").replace(/\s+/g, " ").trim().slice(0, 60);
+          el.getAttribute("href"),
+        ].filter(Boolean).join(" ").replace(/\s+/g, " ").trim().slice(0, 80);
         return { index, label, visible: rect.width > 20 && rect.height > 10 };
       })
       .filter((c) => c.visible && c.label);
-  });
+  }, selector);
 
   if (!choices.length) return null;
 
-  // あとで確認できるように候補を残す
   const dir = path.join(OUT_DIR, "inspect");
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(path.join(dir, "templates.json"), JSON.stringify(choices, null, 2));
 
-  const named = cfg.composer.template &&
-    choices.find((c) => c.label.includes(cfg.composer.template));
-  const preferred = !named && cfg.composer.templatePreferred
-    ? (cfg.composer.templatePreferred.split("|")
-        .map((word) => choices.find((c) => c.label.includes(word)))
-        .find(Boolean))
-    : null;
-  // 「戻る」「ログアウト」などは選ばない
-  const fallback = choices.find((c) => !/戻る|ログアウト|ヘルプ|使い方|マニュアル|削除/.test(c.label));
-  const picked = named || preferred || fallback;
-  if (!picked) return null;
+  const skip = /戻る|ログアウト|ヘルプ|使い方|マニュアル|削除|キャンセル|トップ|メニュー/;
+  const ordered = choices
+    .filter((c) => !skip.test(c.label))
+    .sort((a, b) => rank(a.label) - rank(b.label));
 
-  const target = page.locator(
-    'a, button, input[type="submit"], input[type="button"], input[type="image"], [role="button"]'
-  ).nth(picked.index);
-  await target.click({ timeout: 8000 }).catch(() => {});
-  await page.waitForLoadState("domcontentloaded").catch(() => {});
-  await page.waitForTimeout(1500);
-  return picked.label;
+  for (const candidate of ordered.slice(0, 3)) {
+    if (page.url() !== startUrl) {
+      await page.goto(startUrl, { waitUntil: "domcontentloaded" }).catch(() => {});
+      await page.waitForTimeout(800);
+    }
+    await page.locator(selector).nth(candidate.index).click({ timeout: 8000 }).catch(() => {});
+    await page.waitForLoadState("domcontentloaded").catch(() => {});
+    await page.waitForTimeout(1500);
+    if (await hasSubject()) return `「${candidate.label.slice(0, 30)}」を選択`;
+  }
+
+  return null;
 }
 
 /**
@@ -371,10 +413,8 @@ async function openComposer(page, cfg) {
   if (await hasSubject()) return { url: page.url(), how: "設定ファイルのURL" };
 
   // 件名欄が無い＝テンプレート選択の画面かもしれないので、1つ選んで進む
-  const template = await passTemplateStep(page, cfg);
-  if (template && (await hasSubject())) {
-    return { url: page.url(), how: `テンプレート「${template}」を選択` };
-  }
+  const template = await passTemplateStep(page, cfg, hasSubject);
+  if (template) return { url: page.url(), how: `テンプレート: ${template}` };
 
   console.log("· 設定のURLでは作成画面が開けなかったので、メニューから探します");
   const trails = [/メルマガ|メールマガジン|メール配信/, /新規|作成|書く|配信予約|新しい/];
