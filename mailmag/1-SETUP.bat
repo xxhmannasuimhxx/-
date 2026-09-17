@@ -6,41 +6,44 @@ setlocal
 title mailmag setup
 set "ROOT=%~dp0.."
 set "TRIED="
+set "RESULT=%TEMP%\mailmag-result.txt"
 
 rem --- Case 1: normal start from an extracted folder ---------------------
 if exist "%ROOT%\mailmag\src\setup.js" goto CHECKNODE
 
 rem --- Case 2: started from INSIDE the ZIP file --------------------------
-rem Windows copies only this one file to a Temp folder, so the rest is missing.
-rem Try to extract the downloaded ZIP automatically.
+rem Windows copies only this one file to a Temp folder, so the rest is
+rem missing. Find the downloaded ZIP (Desktop / Downloads / OneDrive / ...)
+rem and extract it to %USERPROFILE%\mailmag-tool.
 echo.
 echo   [!] This file was started from INSIDE the ZIP file.
 echo       ZIP wo tenkai (extract) sezu ni jikkou saremashita.
-echo       Extracting the ZIP for you, please wait...
+echo       Looking for the ZIP and extracting it for you, please wait...
 echo.
 
-set "DEST=%USERPROFILE%\mailmag-tool"
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$dl = Join-Path $env:USERPROFILE 'Downloads'; $all = @(Get-ChildItem -Path $dl -Filter 'mailmag-setup*.zip' -ErrorAction SilentlyContinue); if ($all.Count -eq 0) { exit 1 }; $z = $null; foreach ($f in $all) { if (-not $z -or $f.LastWriteTime -gt $z.LastWriteTime) { $z = $f } }; $dest = Join-Path $env:USERPROFILE 'mailmag-tool'; Expand-Archive -LiteralPath $z.FullName -DestinationPath $dest -Force; Write-Host ('   Extracted: ' + $z.Name)"
-if errorlevel 1 goto NEEDEXTRACT
+del "%RESULT%" >nul 2>nul
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='SilentlyContinue'; $roots=@([Environment]::GetFolderPath('Desktop'), [Environment]::GetFolderPath('MyDocuments'), $env:USERPROFILE, (Join-Path $env:USERPROFILE 'Downloads'), $env:OneDrive); $newest=$null; foreach($r in $roots){ if(-not $r){continue}; foreach($h in (Get-ChildItem -LiteralPath $r -Filter 'mailmag-setup*.zip' -Recurse -Depth 2 -File)){ if(-not $newest -or $h.LastWriteTime -gt $newest.LastWriteTime){$newest=$h} } }; if(-not $newest){exit 1}; $dest=Join-Path $env:USERPROFILE 'mailmag-tool'; Expand-Archive -LiteralPath $newest.FullName -DestinationPath $dest -Force; foreach($c in @($dest,(Join-Path $dest 'mailmag-tool'))){ if(Test-Path -LiteralPath (Join-Path $c 'mailmag\src\setup.js')){ Write-Output $c; exit 0 } }; exit 1" > "%RESULT%" 2>nul
+if not exist "%RESULT%" goto NEEDEXTRACT
+set "FOUND="
+for /f "usebackq delims=" %%P in ("%RESULT%") do if not defined FOUND set "FOUND=%%P"
+del "%RESULT%" >nul 2>nul
+if not defined FOUND goto NEEDEXTRACT
+if not exist "%FOUND%\mailmag\src\setup.js" goto NEEDEXTRACT
 
-if exist "%DEST%\mailmag-tool\mailmag\src\setup.js" set "ROOT=%DEST%\mailmag-tool"
-if exist "%DEST%\mailmag\src\setup.js" set "ROOT=%DEST%"
-if not exist "%ROOT%\mailmag\src\setup.js" goto NEEDEXTRACT
-
-echo   OK. Folder: %ROOT%
-echo   (Next time, start 1-SETUP / 2-POST from this folder.)
+set "ROOT=%FOUND%"
+echo   OK. Extracted to: %ROOT%
 echo.
 goto CHECKNODE
 
 :NEEDEXTRACT
 echo.
-echo   Please extract the ZIP first / ZIP wo tenkai shite kudasai:
+echo   Could not find the ZIP automatically.
+echo   Please extract it by hand / ZIP wo tenkai shite kudasai:
 echo     1. Close this window.
-echo     2. The Downloads folder opens now.
-echo     3. Right-click "mailmag-setup.zip" -^> "Extract All" (subete tenkai) -^> Extract
+echo     2. Find "mailmag-setup.zip" (Desktop or Downloads).
+echo     3. Right-click it -^> "Extract All" (subete tenkai) -^> Extract
 echo     4. In the new folder: mailmag-tool -^> mailmag -^> 1-SETUP
 echo.
-start "" "%USERPROFILE%\Downloads"
 pause
 exit /b 1
 
@@ -79,6 +82,11 @@ exit /b 1
 :RUN
 echo   Node.js: %NODEEXE%
 "%NODEEXE%" "%ROOT%\mailmag\src\setup.js"
+
+rem Put shortcuts on the Desktop so the folder never has to be hunted again.
+powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%\mailmag\make-shortcuts.ps1" "%ROOT%" >nul 2>nul
+echo.
+echo   (Desktop shortcuts: "mailmag 1-SETUP" / "mailmag 2-POST")
 echo.
 pause
 exit /b 0
@@ -94,7 +102,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "%CHECKER%"
 echo.
 echo   A Notepad window opened (mailmag-check.txt).
 echo   Please paste its contents into the chat with Claude.
-echo   Memo wo Claude ni hattsukete kudasai.
 echo.
 pause
 exit /b 1
