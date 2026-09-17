@@ -14,7 +14,7 @@
 const fs = require("fs");
 const path = require("path");
 const { spawnSync } = require("child_process");
-const { ENV_FILE } = require("./paths");
+const { ENV_FILE, AUTH_FILE } = require("./paths");
 
 const ROOT = path.join(__dirname, "..");        // mailmag/
 const REPO = path.join(ROOT, "..");             // リポジトリ直下
@@ -163,8 +163,17 @@ function ensureBrowser() {
 async function ensureEnv() {
   step(3, "リザーブストックのログイン情報を確認しています…");
   const current = fs.existsSync(ENV_FILE) ? fs.readFileSync(ENV_FILE, "utf8") : "";
-  if (/^RESERVESTOCK_EMAIL=.+$/m.test(current) && /^RESERVESTOCK_PASSWORD=.+$/m.test(current)) {
+  const hasEmail = /^RESERVESTOCK_EMAIL=.+$/m.test(current);
+  const hasPassword = /^RESERVESTOCK_PASSWORD=.+$/m.test(current);
+
+  if (hasEmail && hasPassword) {
     say(`  保存済みです（${ENV_FILE}）。OK`);
+    return;
+  }
+  // パスワードを保存しない選択をした場合は、ログイン状態が残っている限り聞き直さない
+  if (hasEmail && fs.existsSync(AUTH_FILE)) {
+    say("  パスワードは保存していませんが、ログイン状態が残っているので進みます。OK");
+    say(`  （保存し直したいときは ${ENV_FILE} を削除してから 1-SETUP を実行）`);
     return;
   }
   say("  リザストにログインするときの情報を入力してください。");
