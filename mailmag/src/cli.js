@@ -18,6 +18,7 @@ const { pickDraft, listDrafts, markPosted, DRAFT_DIR } = require("./draft");
 const { compose, writeOutput } = require("./compose");
 const { deckToMarkdown } = require("./deckSource");
 const rs = require("./reservestock");
+const { prompt } = require("./prompt");
 
 const ROOT = path.join(__dirname, "..");
 const OUT_DIR = path.join(ROOT, "out");
@@ -37,19 +38,32 @@ function parseArgs(argv) {
   return args;
 }
 
-function requireDraft(args, { respectDate = true } = {}) {
-  const draft = pickDraft({
+async function requireDraft(args, { respectDate = true } = {}) {
+  let draft = pickDraft({
     file: args.file,
     today: args.today,
     respectDate: respectDate && !args.force,
   });
+
+  // 予定日がまだ先の原稿しかないときは、その場で確認する
+  if (!draft && !args.file) {
+    const ready = listDrafts().filter((d) => d.status === "ready");
+    if (ready.length && process.stdin.isTTY) {
+      const next = ready[0];
+      console.log(`\n投稿まちの原稿:「${next.subject}」`);
+      console.log(`予定日は ${next.date} で、まだ先の日付です。`);
+      const answer = await prompt("今すぐ下書きとして保存しますか？（はい: y / いいえ: n）: ");
+      if (/^(y|yes|は|はい)/i.test(answer)) draft = next;
+    }
+  }
+
   if (!draft) {
     const ready = listDrafts().filter((d) => d.status === "ready");
     throw new Error(
       `投稿できる原稿がありません。\n` +
-      `${path.relative(process.cwd(), DRAFT_DIR)}/ に status: ready の .md を置くか、--file で指定してください。` +
+      `${path.relative(process.cwd(), DRAFT_DIR)}/ に status: ready の .md を置いてください。` +
       (ready.length
-        ? `\n（予定日がまだ先の原稿が ${ready.length} 件あります。今すぐ投稿するなら --force）`
+        ? `\n（予定日がまだ先の原稿が ${ready.length} 件あります。今すぐ出すなら、もう一度実行して「y」を選んでください）`
         : "")
     );
   }
@@ -91,8 +105,8 @@ function cmdNew(args) {
   console.log("そのままでは読み物になっていないので、本文を整えてから status: ready にしてください。");
 }
 
-function cmdBuild(args, { respectDate = false } = {}) {
-  const draft = requireDraft(args, { respectDate });
+async function cmdBuild(args, { respectDate = false } = {}) {
+  const draft = await requireDraft(args, { respectDate });
   const composed = compose(draft);
   composed.format = args.format || "auto";   // auto: リッチエディタならHTML、ふつうの欄ならテキスト
   const files = writeOutput(composed, OUT_DIR, draft.name);
@@ -159,7 +173,7 @@ async function cmdInspect(args) {
 
 async function cmdPost(args) {
   rs.loadDotEnv();
-  const { draft, composed } = cmdBuild(args, { respectDate: true });
+  const { draft, composed } = await cmdBuild(args, { respectDate: true });
 
   if (args["dry-run"]) {
     console.log("\n--dry-run のためブラウザ操作は行いません。out/ のプレビューを確認してください。");
