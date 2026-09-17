@@ -5,6 +5,7 @@ chcp 65001 >nul
 setlocal
 title mailmag setup
 set "ROOT=%~dp0.."
+set "TRIED="
 
 rem --- Case 1: normal start from an extracted folder ---------------------
 if exist "%ROOT%\mailmag\src\setup.js" goto CHECKNODE
@@ -43,12 +44,39 @@ start "" "%USERPROFILE%\Downloads"
 pause
 exit /b 1
 
+rem --- Node.js -----------------------------------------------------------
 :CHECKNODE
 set "FINDER=%~dp0find-node.bat"
 if exist "%ROOT%\mailmag\find-node.bat" set "FINDER=%ROOT%\mailmag\find-node.bat"
 call "%FINDER%"
-if errorlevel 1 goto NONODE
+if not errorlevel 1 goto RUN
+if defined TRIED goto NONODE
 
+rem Not found: install Node.js automatically with winget (Windows 10/11).
+set "TRIED=1"
+echo.
+echo   Node.js is not installed. Installing it for you now...
+echo   Node.js wo jidou de install shimasu. Sukoshi jikan ga kakarimasu.
+echo   (If a permission dialog appears, please allow it.)
+echo.
+where winget >nul 2>nul
+if errorlevel 1 goto MANUALINSTALL
+
+winget install -e --id OpenJS.NodeJS.LTS --accept-source-agreements --accept-package-agreements --disable-interactivity
+echo.
+echo   Checking again...
+goto CHECKNODE
+
+:MANUALINSTALL
+echo   Automatic install is not available on this PC.
+echo   The download page opens now. Click the green "LTS" button,
+echo   run the downloaded file, keep clicking Next, then start 1-SETUP again.
+echo.
+start "" "https://nodejs.org/ja/download"
+pause
+exit /b 1
+
+:RUN
 echo   Node.js: %NODEEXE%
 "%NODEEXE%" "%ROOT%\mailmag\src\setup.js"
 echo.
@@ -57,15 +85,16 @@ exit /b 0
 
 :NONODE
 echo.
-echo   Node.js is required. / Node.js ga hitsuyou desu.
+echo   Node.js is still not found. / Mada mitsukarimasen.
+echo   Making a report file so Claude can see what happened...
 echo.
-echo   1. The download page will open in your browser.
-echo   2. Click the green "LTS" button and install it (keep clicking Next).
-echo   3. Run this file (1-SETUP) again.
+set "CHECKER=%~dp0check-node.ps1"
+if exist "%ROOT%\mailmag\check-node.ps1" set "CHECKER=%ROOT%\mailmag\check-node.ps1"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%CHECKER%"
 echo.
-echo   * If you already installed it, restart the PC once and try again.
-echo     (Sudeni install zumi nara, PC wo saikidou shite mou ichido)
+echo   A Notepad window opened (mailmag-check.txt).
+echo   Please paste its contents into the chat with Claude.
+echo   Memo wo Claude ni hattsukete kudasai.
 echo.
-start "" "https://nodejs.org/ja/download"
 pause
 exit /b 1
