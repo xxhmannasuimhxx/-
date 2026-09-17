@@ -1,14 +1,14 @@
 {
   "_comment": [
     "リザーブストック（リザスト）は公開APIが無いため、管理画面をブラウザ操作して投稿する。",
-    "ログインはトップページ（www.reservestock.jp）の右側にあるフォームから行う。",
-    "URL やセレクタは画面変更で変わるので、この JSON だけ直せば追随できるようにしている。",
-    "実際の値が分からないときは 1-SETUP を実行すると、ログイン後の画面の入力欄一覧が",
-    "mailmag/out/inspect/ に出力される。それを見て書き換える。"
+    "ログインはトップページ（www.reservestock.jp）のフォームから行う。",
+    "メルマガ作成は「テンプレート選択」→「本文入力」の2段階。composerUrl は選択画面のURL。",
+    "composer.template に使いたいテンプレート名を書くとそれを選ぶ。空なら templatePreferred の順で自動選択。",
+    "URL やセレクタは画面変更で変わるので、この JSON だけ直せば追随できるようにしている。"
   ],
   "baseUrl": "https://www.reservestock.jp",
   "loginUrl": "https://www.reservestock.jp/",
-  "composerUrl": "https://www.reservestock.jp/service_provider_sessions/menu",
+  "composerUrl": "https://www.reservestock.jp/mail_magazines/select_template/129011",
   "loggedOutMarker": "input[type=password]",
   "login": {
     "email": [
@@ -52,7 +52,9 @@
       "select[name=\"mail_magazine_id\"]"
     ],
     "saveDraftPattern": "下書き|一時保存|保存する|保存",
-    "sendPattern": "送信|配信|予約|申込|削除"
+    "sendPattern": "送信|配信|予約|申込|削除",
+    "template": "",
+    "templatePreferred": "使わない|使用しない|白紙|空白|なし|シンプル|標準|テキスト|プレーン"
   },
   "labels": {
     "subject": "件名|タイトル|題名",

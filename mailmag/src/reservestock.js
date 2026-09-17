@@ -307,6 +307,59 @@ async function fillBody(page, cfg, composed) {
 }
 
 /**
+ * テンプレート選択の画面を通過する。
+ *
+ * リザストのメルマガ作成は「テンプレートを選ぶ」→「本文を書く」の2段階。
+ * 設定の composer.template（名前）を優先し、無ければ templatePreferred の
+ * 並び順（使わない・白紙・シンプル…）で選ぶ。どれも無ければ最初の候補。
+ */
+async function passTemplateStep(page, cfg) {
+  const choices = await page.evaluate(() => {
+    const clickable = [...document.querySelectorAll(
+      'a, button, input[type="submit"], input[type="button"], input[type="image"], [role="button"]'
+    )];
+    return clickable
+      .map((el, index) => {
+        const rect = el.getBoundingClientRect();
+        const image = el.querySelector && el.querySelector("img");
+        const label = [
+          el.innerText, el.value, el.getAttribute("title"), el.getAttribute("alt"),
+          image && image.getAttribute("alt"), image && image.getAttribute("title"),
+        ].filter(Boolean).join(" ").replace(/\s+/g, " ").trim().slice(0, 60);
+        return { index, label, visible: rect.width > 20 && rect.height > 10 };
+      })
+      .filter((c) => c.visible && c.label);
+  });
+
+  if (!choices.length) return null;
+
+  // あとで確認できるように候補を残す
+  const dir = path.join(OUT_DIR, "inspect");
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, "templates.json"), JSON.stringify(choices, null, 2));
+
+  const named = cfg.composer.template &&
+    choices.find((c) => c.label.includes(cfg.composer.template));
+  const preferred = !named && cfg.composer.templatePreferred
+    ? (cfg.composer.templatePreferred.split("|")
+        .map((word) => choices.find((c) => c.label.includes(word)))
+        .find(Boolean))
+    : null;
+  // 「戻る」「ログアウト」などは選ばない
+  const fallback = choices.find((c) => !/戻る|ログアウト|ヘルプ|使い方|マニュアル|削除/.test(c.label));
+  const picked = named || preferred || fallback;
+  if (!picked) return null;
+
+  const target = page.locator(
+    'a, button, input[type="submit"], input[type="button"], input[type="image"], [role="button"]'
+  ).nth(picked.index);
+  await target.click({ timeout: 8000 }).catch(() => {});
+  await page.waitForLoadState("domcontentloaded").catch(() => {});
+  await page.waitForTimeout(1500);
+  return picked.label;
+}
+
+/**
  * メルマガ作成画面を開く。
  * 設定の URL で開けなければ、管理画面のリンクをたどって探す。
  */
@@ -316,6 +369,12 @@ async function openComposer(page, cfg) {
   await page.goto(cfg.composerUrl, { waitUntil: "domcontentloaded" }).catch(() => {});
   await page.waitForTimeout(1200);
   if (await hasSubject()) return { url: page.url(), how: "設定ファイルのURL" };
+
+  // 件名欄が無い＝テンプレート選択の画面かもしれないので、1つ選んで進む
+  const template = await passTemplateStep(page, cfg);
+  if (template && (await hasSubject())) {
+    return { url: page.url(), how: `テンプレート「${template}」を選択` };
+  }
 
   console.log("· 設定のURLでは作成画面が開けなかったので、メニューから探します");
   const trails = [/メルマガ|メールマガジン|メール配信/, /新規|作成|書く|配信予約|新しい/];
@@ -428,6 +487,7 @@ async function describeForm(page, name) {
 
 module.exports = {
   loadConfig, loadDotEnv, credentials, launch, login, openLoginPage, fillBody, saveDraft,
+  passTemplateStep,
   autoPick, findSubject, openComposer,
   capture, describeForm, firstVisible, byLabel, AUTH_FILE, OUT_DIR, CONFIG_FILE,
 };
