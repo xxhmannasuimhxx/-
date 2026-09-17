@@ -309,12 +309,11 @@ async function fillBody(page, cfg, composed) {
 /**
  * テンプレート選択の画面を通過する。
  *
- * リザストのメルマガ作成は「テンプレートを選ぶ」→「本文を書く」の2段階で、
- * テンプレートを選んだ時点で、その回のメルマガ（edit_html/<番号>）が作られる。
- * 選択の形式は画面によって違うため、次の順に試す。
- *   1. ラジオボタン（＋「作成」などのボタン）
- *   2. リンク・ボタン・画像などのクリック（最大3つまで試す）
- * 設定の composer.template（名前）があればそれを優先する。
+ * リザストのメルマガ作成は「テンプレート等を選ぶ」→「本文を書く」の2段階。
+ * 選択画面には文字サイズや掲載項目の設定もあるため、勝手に変えず、
+ *   1. 設定で composer.template が指定されていれば、その名前のテンプレートを選ぶ
+ *   2. 「記事を書く」などの先へ進むボタンを押す
+ * という順で進む。ボタンが見つからない画面では、リンクや画像を順に試す。
  */
 async function passTemplateStep(page, cfg, hasSubject) {
   // あとで確認できるように、選択画面そのものを残す
@@ -323,43 +322,32 @@ async function passTemplateStep(page, cfg, hasSubject) {
 
   const wanted = cfg.composer.template || "";
   const preferred = (cfg.composer.templatePreferred || "").split("|").filter(Boolean);
+  const proceed = new RegExp(cfg.composer.proceedPattern || "記事を書く|作成|決定|次へ|進む");
+  const skip = /戻る|ログアウト|ヘルプ|使い方|マニュアル|削除|キャンセル|プレビュー|一覧/;
   const startUrl = page.url();
 
-  /** 候補の並べ替え（指定名 → 優先語 → 元の順） */
-  const rank = (label) => {
-    if (wanted && label.includes(wanted)) return -1000;
-    const hit = preferred.findIndex((word) => label.includes(word));
-    return hit >= 0 ? hit : 500;
-  };
-
-  // ---- 1. ラジオボタン形式 ----
-  const radios = await page.evaluate(() => {
-    return [...document.querySelectorAll('input[type="radio"]')].map((el, i) => {
-      const label = [
-        el.labels && el.labels[0] && el.labels[0].innerText,
-        el.closest("label") && el.closest("label").innerText,
-        el.closest("li, td, div") && el.closest("li, td, div").innerText,
-        el.value,
-      ].filter(Boolean).join(" ").replace(/\s+/g, " ").trim().slice(0, 60);
-      return { index: i, label };
+  // ---- 1. テンプレートの指定があれば、その項目を選ぶ ----
+  if (wanted) {
+    const radios = await page.evaluate(() => {
+      return [...document.querySelectorAll('input[type="radio"]')].map((el, i) => {
+        const label = [
+          el.labels && el.labels[0] && el.labels[0].innerText,
+          el.closest("label") && el.closest("label").innerText,
+          el.closest("li, td, div") && el.closest("li, td, div").innerText,
+        ].filter(Boolean).join(" ").replace(/\s+/g, " ").trim().slice(0, 60);
+        return { index: i, label };
+      });
     });
-  });
-
-  if (radios.length) {
-    const pick = [...radios].sort((a, b) => rank(a.label) - rank(b.label))[0];
-    await page.locator('input[type="radio"]').nth(pick.index).check({ timeout: 5000 }).catch(() => {});
-    const submit = page.getByRole("button", { name: /作成|決定|次へ|進む|選択|開始|作る/ }).first();
-    if (await submit.count().catch(() => 0)) {
-      await submit.click({ timeout: 8000 }).catch(() => {});
+    const hit = radios.find((r) => r.label.includes(wanted));
+    if (hit) {
+      await page.locator('input[type="radio"]').nth(hit.index).check({ timeout: 5000 }).catch(() => {});
+      console.log(`· テンプレート「${wanted}」を選びました`);
     } else {
-      await page.locator('input[type="submit"]').first().click({ timeout: 5000 }).catch(() => {});
+      console.log(`! テンプレート「${wanted}」が見つからないので、画面の既定のまま進みます`);
     }
-    await page.waitForLoadState("domcontentloaded").catch(() => {});
-    await page.waitForTimeout(1500);
-    if (await hasSubject()) return `ラジオボタン「${pick.label || "（名前なし）"}」`;
   }
 
-  // ---- 2. リンク・ボタン形式 ----
+  // ---- 2. 先へ進むボタン（なければリンク等）を押す ----
   const selector = 'a, button, input[type="submit"], input[type="button"], input[type="image"], [role="button"], [onclick]';
   const choices = await page.evaluate((sel) => {
     return [...document.querySelectorAll(sel)]
@@ -369,33 +357,50 @@ async function passTemplateStep(page, cfg, hasSubject) {
         const label = [
           el.innerText, el.value, el.getAttribute("title"), el.getAttribute("alt"),
           image && image.getAttribute("alt"), image && image.getAttribute("title"),
-          el.getAttribute("href"),
         ].filter(Boolean).join(" ").replace(/\s+/g, " ").trim().slice(0, 80);
         return { index, label, visible: rect.width > 20 && rect.height > 10 };
       })
       .filter((c) => c.visible && c.label);
   }, selector);
 
-  if (!choices.length) return null;
-
   const dir = path.join(OUT_DIR, "inspect");
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(path.join(dir, "templates.json"), JSON.stringify(choices, null, 2));
 
-  const skip = /戻る|ログアウト|ヘルプ|使い方|マニュアル|削除|キャンセル|トップ|メニュー/;
+  const rank = (label) => {
+    if (proceed.test(label)) return -2000;                       // 「記事を書く」など
+    if (wanted && label.includes(wanted)) return -1000;
+    const hit = preferred.findIndex((word) => label.includes(word));
+    return hit >= 0 ? hit : 500;
+  };
+
   const ordered = choices
     .filter((c) => !skip.test(c.label))
     .sort((a, b) => rank(a.label) - rank(b.label));
 
-  for (const candidate of ordered.slice(0, 3)) {
+  for (const candidate of (choices.length ? ordered.slice(0, 3) : [])) {
     if (page.url() !== startUrl) {
       await page.goto(startUrl, { waitUntil: "domcontentloaded" }).catch(() => {});
       await page.waitForTimeout(800);
     }
     await page.locator(selector).nth(candidate.index).click({ timeout: 8000 }).catch(() => {});
     await page.waitForLoadState("domcontentloaded").catch(() => {});
-    await page.waitForTimeout(1500);
-    if (await hasSubject()) return `「${candidate.label.slice(0, 30)}」を選択`;
+    await page.waitForTimeout(2000);
+    if (await hasSubject()) return `「${candidate.label.slice(0, 30)}」を押して本文画面へ`;
+  }
+
+  // 最後の保険：ボタンらしい印の無い（画像や装飾だけの）要素でも、
+  // 文字で「記事を書く」などが見えていればそこを押してみる
+  if (page.url() !== startUrl) {
+    await page.goto(startUrl, { waitUntil: "domcontentloaded" }).catch(() => {});
+    await page.waitForTimeout(800);
+  }
+  const byText = page.getByText(proceed).last();
+  if (await byText.count().catch(() => 0)) {
+    await byText.click({ timeout: 8000 }).catch(() => {});
+    await page.waitForLoadState("domcontentloaded").catch(() => {});
+    await page.waitForTimeout(2000);
+    if (await hasSubject()) return "画面の文字「記事を書く」を押して本文画面へ";
   }
 
   return null;

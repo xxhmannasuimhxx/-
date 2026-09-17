@@ -54,7 +54,8 @@
     "saveDraftPattern": "下書き|一時保存|保存する|保存",
     "sendPattern": "送信|配信|予約|申込|削除",
     "template": "",
-    "templatePreferred": "使わない|使用しない|白紙|空白|なし|シンプル|標準|テキスト|プレーン"
+    "templatePreferred": "",
+    "proceedPattern": "記事を書く|メールを書く|本文を書く|書く|この内容で作成|作成する|決定|次へ|進む"
   },
   "labels": {
     "subject": "件名|タイトル|題名",
