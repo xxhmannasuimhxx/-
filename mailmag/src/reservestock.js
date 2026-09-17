@@ -335,6 +335,24 @@ async function openComposer(page, cfg) {
     fs.writeFileSync(path.join(dir, "found-composer-url.txt"), page.url() + "\n");
     return { url: page.url(), how: "メニューから自動で発見" };
   }
+  // 見つからなかったときは、画面内のリンク一覧を残す（次の手がかりにする）
+  const links = await page.evaluate(() =>
+    [...document.querySelectorAll("a")]
+      .map((a) => ({ text: (a.innerText || "").trim().slice(0, 40), href: a.href }))
+      .filter((l) => l.text && l.href)
+  );
+  const dir = path.join(OUT_DIR, "inspect");
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, "links.json"), JSON.stringify(links, null, 2));
+
+  const mailLinks = links.filter((l) => /メルマガ|メール|マガジン|mail|magazine/i.test(l.text + l.href));
+  if (mailLinks.length) {
+    console.log("· メール関連のリンク（この中に作成画面があるかもしれません）:");
+    for (const l of mailLinks.slice(0, 15)) console.log(`    ${l.text} → ${l.href}`);
+  } else {
+    console.log(`· リンクが ${links.length} 件見つかりました（${path.join("mailmag", "out", "inspect", "links.json")} に保存）`);
+  }
+
   throw new Error(
     "メルマガ作成画面を開けませんでした。\n" +
     "リザストの画面でメルマガ作成ページを開き、そのURLを教えてください（設定に書き込みます）。"
