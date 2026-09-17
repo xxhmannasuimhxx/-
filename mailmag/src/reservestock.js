@@ -24,6 +24,7 @@ function loadConfig() {
   cfg.baseUrl = process.env.RESERVESTOCK_BASE_URL || cfg.baseUrl;
   cfg.loginUrl = process.env.RESERVESTOCK_LOGIN_URL || cfg.loginUrl;
   cfg.composerUrl = process.env.RESERVESTOCK_COMPOSER_URL || cfg.composerUrl;
+  cfg.menuUrl = process.env.RESERVESTOCK_MENU_URL || cfg.menuUrl;
   return cfg;
 }
 
@@ -97,9 +98,37 @@ async function isLoggedOut(page, cfg) {
   return (await page.locator(cfg.loggedOutMarker).count()) > 0;
 }
 
+/** ログイン画面を開く（候補URLを順に試す。404などは飛ばす） */
+async function openLoginPage(page, cfg) {
+  const candidates = [cfg.loginUrl, ...(cfg.loginUrlCandidates || []), cfg.baseUrl]
+    .filter(Boolean)
+    .filter((url, i, all) => all.indexOf(url) === i);
+
+  for (const url of candidates) {
+    const response = await page.goto(url, { waitUntil: "domcontentloaded" }).catch(() => null);
+    const notFound = response && response.status() >= 400;
+    if (notFound) continue;
+    const hasForm = (await page.locator('input[type="password"]').count()) > 0;
+    const loggedIn = !(await isLoggedOut(page, cfg));
+    if (hasForm || loggedIn) return url;
+  }
+  return candidates[0];
+}
+
 /** ログイン（セッションが生きていれば何もしない） */
 async function login(page, cfg, { force = false } = {}) {
-  await page.goto(cfg.loginUrl, { waitUntil: "domcontentloaded" });
+  // トップページはログイン後もフォームが出ることがあるため、
+  // まず管理画面を開いて「入れているか」を確かめる
+  const adminUrl = cfg.menuUrl || cfg.composerUrl;
+  if (!force && adminUrl) {
+    const response = await page.goto(adminUrl, { waitUntil: "domcontentloaded" }).catch(() => null);
+    if (response && response.status() < 400 && !(await isLoggedOut(page, cfg))) {
+      console.log("· 保存済みセッションでログイン済みです");
+      return;
+    }
+  }
+
+  await openLoginPage(page, cfg);
   if (!force && !(await isLoggedOut(page, cfg))) {
     console.log("· 保存済みセッションでログイン済みです");
     return;
@@ -290,7 +319,7 @@ async function openComposer(page, cfg) {
 
   console.log("· 設定のURLでは作成画面が開けなかったので、メニューから探します");
   const trails = [/メルマガ|メールマガジン|メール配信/, /新規|作成|書く|配信予約|新しい/];
-  await page.goto(cfg.baseUrl, { waitUntil: "domcontentloaded" }).catch(() => {});
+  await page.goto(cfg.menuUrl || cfg.baseUrl, { waitUntil: "domcontentloaded" }).catch(() => {});
   for (const pattern of trails) {
     const link = page.getByRole("link", { name: pattern }).first();
     if (!(await link.count().catch(() => 0))) continue;
@@ -380,7 +409,7 @@ async function describeForm(page, name) {
 }
 
 module.exports = {
-  loadConfig, loadDotEnv, credentials, launch, login, fillBody, saveDraft,
+  loadConfig, loadDotEnv, credentials, launch, login, openLoginPage, fillBody, saveDraft,
   autoPick, findSubject, openComposer,
   capture, describeForm, firstVisible, byLabel, AUTH_FILE, OUT_DIR, CONFIG_FILE,
 };

@@ -108,8 +108,9 @@ async function cmdLogin(args) {
   const cfg = rs.loadConfig();
   const { browser, page } = await rs.launch({ headed: true });
   try {
-    await page.goto(cfg.loginUrl, { waitUntil: "domcontentloaded" });
+    const opened = await rs.openLoginPage(page, cfg);
     if (args.manual) {
+      console.log(`ログイン画面: ${opened}`);
       console.log("ブラウザでログインを完了してください。完了したら Enter を押してください…");
       process.stdin.resume();
       await new Promise((resolve) => process.stdin.once("data", resolve));
