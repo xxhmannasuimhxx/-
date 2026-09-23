@@ -26,4 +26,5 @@ function New-Link($linkName, $targetBat) {
 
 New-Link 'mailmag 1-SETUP.lnk' (Join-Path $root 'mailmag\1-SETUP.bat')
 New-Link 'mailmag 2-POST.lnk'  (Join-Path $root 'mailmag\2-POST.bat')
+New-Link 'mailmag 3-AUTO.lnk'  (Join-Path $root 'mailmag\3-AUTO.bat')
 exit 0

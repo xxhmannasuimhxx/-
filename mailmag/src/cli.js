@@ -10,6 +10,7 @@
  *   node mailmag/src/cli.js post                 リザストに下書きとして保存する
  *
  * 共通オプション: --file <原稿.md> --headed --dry-run --keep-open --force
+ *                 --auto（自動実行用。質問せず、投稿まちが無ければ静かに終了）
  */
 
 const fs = require("fs");
@@ -46,8 +47,8 @@ async function requireDraft(args, { respectDate = true } = {}) {
     respectDate: respectDate && !args.force,
   });
 
-  // 予定日がまだ先の原稿しかないときは、その場で確認する
-  if (!draft && !args.file) {
+  // 予定日がまだ先の原稿しかないときは、その場で確認する（自動実行では聞かない）
+  if (!draft && !args.file && !args.auto) {
     const ready = listDrafts().filter((d) => d.status === "ready");
     if (ready.length && process.stdin.isTTY) {
       const next = ready[0];
@@ -184,8 +185,27 @@ async function cmdInspect(args) {
   }
 }
 
+/** 自動実行の記録を1行残す */
+function writeLog(message) {
+  const file = path.join(OUT_DIR, "auto-post.log");
+  fs.mkdirSync(OUT_DIR, { recursive: true });
+  const stamp = new Date().toLocaleString("ja-JP");
+  fs.appendFileSync(file, `[${stamp}] ${message}\n`);
+}
+
 async function cmdPost(args) {
   rs.loadDotEnv();
+
+  // 自動実行で投稿まちが無ければ、エラーにせず静かに終わる
+  if (args.auto && !args.file) {
+    const due = pickDraft({ today: args.today });
+    if (!due) {
+      writeLog("投稿まちの原稿はありませんでした");
+      console.log("投稿まちの原稿はありません。");
+      return;
+    }
+  }
+
   const { draft, composed } = await cmdBuild(args, { respectDate: true });
 
   if (args["dry-run"]) {
@@ -230,6 +250,7 @@ async function cmdPost(args) {
     const after = await rs.capture(page, "04-after-save");
 
     markPosted(draft, `下書き保存: ${label}`);
+    if (args.auto) writeLog(`下書き保存しました:「${composed.subject}」（${label}）`);
     console.log(`\n下書きとして保存しました（${label}）`);
     console.log(`確認用スクリーンショット: ${path.relative(process.cwd(), after.shot)}`);
     console.log("リザストの管理画面で内容を確認し、配信ボタンはご自身で押してください。");
@@ -257,6 +278,10 @@ async function main() {
 }
 
 main().catch((err) => {
+  // 自動実行のときは、失敗も記録に残す
+  if (process.argv.includes("--auto")) {
+    try { writeLog(`失敗: ${String(err.message || err).split("\n")[0]}`); } catch { /* 記録できなくても続行 */ }
+  }
   // ブラウザの内部ログまで出ると読みづらいので、最初の数行だけ見せる
   const lines = String(err.message || err).split("\n");
   const short = lines.slice(0, 4).join("\n");
