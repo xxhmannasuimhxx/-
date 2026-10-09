@@ -4,7 +4,8 @@
   "private": true,
   "description": "講座スライドと発信コンテンツの原稿を管理するリポジトリ",
   "scripts": {
-    "build:deck": "node build_deck.js"
+    "build:deck": "node build_deck.js",
+    "build:deck:nutrition1": "node build_deck_nutrition_vol1.js"
   },
   "dependencies": {
     "pptxgenjs": "^4.0.1"
