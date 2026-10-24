@@ -1,7 +1,7 @@
 // 集計して、スプレッドシート用の .xlsx と週次分析レポートの下書きを書き出す。
 //   node src/build.mjs --sample            … 架空データで試す（out/sample_* に出力）
 //   node src/build.mjs [--week 2026-10-23] … 本番データ（data/）で作る
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readTable, weekOf, num } from './lib.mjs';
@@ -21,7 +21,7 @@ export function load(sample) {
 }
 
 const KEYS = [
-  ['メルマガ配信回数', 'n'], ['開封率', '%'], ['実質開封率', '%'], ['メルマガ読者', 'n'],
+  ['メルマガ配信回数', 'n'], ['メルマガ配信数', 'n'], ['開封率', '%'], ['実質開封率', '%'], ['メルマガ読者', 'n'],
   ['LINE追加', 'n'], ['LINEブロック', 'n'], ['LINE純増', 'n'], ['LINE有効友だち', 'n'],
   ['IGフォロワー', 'n'], ['説明会申込', 'n'], ['説明会参加', 'n'], ['講座申込', 'n'], ['入金額', '円'],
   ['個別相談', 'n'], ['時間_講座', 'h'], ['時間_発信', 'h'], ['時間_事務', 'h'], ['時間_配信代行', 'h'], ['ワクワク度', 'n'],
@@ -111,7 +111,12 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const pre = sample ? 'sample_' : '';
   const xlsxPath = join(root, 'out', `${pre}集客売上_${a.target}.xlsx`);
   writeXlsx(xlsxPath, sheets(a, { sample }));
-  const mdPath = join(outDir, `${pre}${a.target}_週次分析.md`);
+  let mdPath = join(outDir, `${pre}${a.target}_週次分析.md`);
+  // 推測欄などを書き込んだ後のレポートは上書きしない（--force で上書き）
+  if (!sample && existsSync(mdPath) && !args.includes('--force')) {
+    mdPath = mdPath.replace(/\.md$/, '_再生成.md');
+    console.log('既存のレポートは残し、新しい下書きを別名で保存します（上書きは --force）');
+  }
   writeFileSync(mdPath, report(a, { sample }));
   console.log(`スプレッドシート: ${xlsxPath}\nレポート下書き: ${mdPath}`);
 }

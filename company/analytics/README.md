@@ -31,7 +31,7 @@ node src/build.mjs                # data/ と _shared/metrics.csv から作る �
 | `src/` | `lib`（CSV・週・数字）／`calc`（計算）／`import`（取込）／`xlsx`（書き出し）／`build`（集計・レポート） |
 | `sample/` | 架空データの生成と、その出力 |
 | `tests/` | 自動テスト |
-| `data/` | 本番の正規化データ（集計値のみ）※まだ空 |
+| `data/` | 本番の正規化データ（集計値のみ。10/24 から実データ） |
 | `out/` | スプレッドシート用 .xlsx（Googleドライブにアップロードして見る） |
 | `reports/` | 週次分析レポート |
 
