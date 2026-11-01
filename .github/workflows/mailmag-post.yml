@@ -1,0 +1,134 @@
+# メルマガの原稿を、リザストに「下書き」として入れる（配信はしない）。
+# パソコンの 2-POST / 3-AUTO と同じことを、GitHub 上で動かす版。スマホから使うための入口。
+#
+# 動くタイミング
+#   1. mailmag/drafts/ に status: ready の原稿が届いたとき（Claude アプリで頼んで保存したとき）
+#   2. 毎朝 7:41（日本時間）… 予定日（date:）が今日になった原稿
+#   3. 手動 … GitHub アプリ → Actions →「メルマガ下書きをリザストに入れる」→ Run workflow
+#
+# 必要な Secrets（Settings → Secrets and variables → Actions）
+#   RESERVESTOCK_EMAIL / RESERVESTOCK_PASSWORD
+#
+# このリポジトリは公開（public）なので、スクリーンショットなどは一切アップロードしない。
+# 結果は「件名」と「成功／失敗」だけを実行結果の画面に出す。
+
+name: メルマガ下書きをリザストに入れる
+
+on:
+  push:
+    branches: [main]
+    paths: ["mailmag/drafts/**.md"]
+  schedule:
+    - cron: "41 22 * * *"   # 毎日 7:41（日本時間）
+  workflow_dispatch:
+    inputs:
+      file:
+        description: "入れる原稿のファイル名（空なら、次に投稿まちの1件）"
+        required: false
+        default: ""
+
+concurrency:
+  group: mailmag-post
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      TZ: Asia/Tokyo
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ログイン情報が登録されているか確認
+        id: secrets
+        env:
+          RESERVESTOCK_EMAIL: ${{ secrets.RESERVESTOCK_EMAIL }}
+          RESERVESTOCK_PASSWORD: ${{ secrets.RESERVESTOCK_PASSWORD }}
+        run: |
+          if [ -z "$RESERVESTOCK_EMAIL" ] || [ -z "$RESERVESTOCK_PASSWORD" ]; then
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            {
+              echo "### まだ準備中です"
+              echo "リザストのログイン情報（RESERVESTOCK_EMAIL / RESERVESTOCK_PASSWORD）が Secrets に登録されていないため、何もしませんでした。"
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 今回入れる原稿を決める
+        if: steps.secrets.outputs.ok == 'true'
+        id: targets
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+          INPUT_FILE: ${{ inputs.file }}
+        run: |
+          case "$EVENT" in
+            push)
+              if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+                changed=$(git diff-tree --no-commit-id --name-only -r "$AFTER" -- mailmag/drafts)
+              else
+                changed=$(git diff --name-only --diff-filter=AM "$BEFORE" "$AFTER" -- mailmag/drafts)
+              fi
+              node mailmag/src/ci-targets.js push $changed > targets.txt ;;
+            schedule)
+              node mailmag/src/ci-targets.js schedule > targets.txt ;;
+            *)
+              node mailmag/src/ci-targets.js manual "$INPUT_FILE" > targets.txt ;;
+          esac
+          cat targets.txt
+          if [ -s targets.txt ]; then echo "any=true" >> "$GITHUB_OUTPUT"; else
+            echo "any=false" >> "$GITHUB_OUTPUT"
+            echo "投稿まちの原稿はありませんでした。" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.targets.outputs.any == 'true'
+        with:
+          node-version: 20
+
+      - name: 準備（ブラウザの用意）
+        if: steps.targets.outputs.any == 'true'
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+
+      - name: リザストに下書きとして保存（配信はしない）
+        if: steps.targets.outputs.any == 'true'
+        env:
+          RESERVESTOCK_EMAIL: ${{ secrets.RESERVESTOCK_EMAIL }}
+          RESERVESTOCK_PASSWORD: ${{ secrets.RESERVESTOCK_PASSWORD }}
+        run: |
+          echo "### リザストに下書きを入れました" >> "$GITHUB_STEP_SUMMARY"
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            subject=$(grep -m1 '^subject:' "$f" | sed 's/^subject:[[:space:]]*//')
+            if node mailmag/src/cli.js post --auto --file "$f"; then
+              echo "- ✅ 「${subject:-$f}」" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "- ❌ 「${subject:-$f}」… 入れられませんでした。Claude に「メルマガの自動投稿が失敗した」と伝えてください" >> "$GITHUB_STEP_SUMMARY"
+              exit 1
+            fi
+          done < targets.txt
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**配信ボタンは押していません。** リザストの画面で内容を確かめてから、ご自身で配信してください。" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 原稿を「投稿済み」に書き換えて保存
+        if: always() && steps.targets.outputs.any == 'true'
+        run: |
+          rm -rf mailmag/out targets.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add mailmag/drafts
+          if ! git diff --cached --quiet; then
+            git commit -m "メルマガ原稿を投稿済みに更新 [skip ci]"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
