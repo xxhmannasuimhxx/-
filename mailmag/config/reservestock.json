@@ -1,0 +1,69 @@
+{
+  "_comment": [
+    "リザーブストック（リザスト）は公開APIが無いため、管理画面をブラウザ操作して投稿する。",
+    "ログインはトップページ（www.reservestock.jp）のフォームから行う。",
+    "メルマガ作成は「テンプレート選択」→「本文入力」の2段階。composerUrl は選択画面のURL。",
+    "composer.template に使いたいテンプレート名を書くとそれを選ぶ。空なら templatePreferred の順で自動選択。",
+    "URL やセレクタは画面変更で変わるので、この JSON だけ直せば追随できるようにしている。"
+  ],
+  "baseUrl": "https://www.reservestock.jp",
+  "loginUrl": "https://www.reservestock.jp/",
+  "composerUrl": "https://www.reservestock.jp/mail_magazines/select_template/129011",
+  "loggedOutMarker": "input[type=password]",
+  "login": {
+    "email": [
+      "input[name=\"email\"]",
+      "input[name=\"login_id\"]",
+      "input[type=\"email\"]",
+      "#email"
+    ],
+    "password": [
+      "input[name=\"password\"]",
+      "input[type=\"password\"]",
+      "#password"
+    ],
+    "submit": [
+      "button[type=\"submit\"]",
+      "input[type=\"submit\"]",
+      "text=ログイン"
+    ]
+  },
+  "composer": {
+    "subject": [
+      "input[name=\"subject\"]",
+      "input[name=\"title\"]",
+      "#subject",
+      "#title"
+    ],
+    "bodyFrame": [
+      "iframe.cke_wysiwyg_frame",
+      "iframe[id^=\"tinymce\"]",
+      "iframe[title*=\"エディタ\"]"
+    ],
+    "body": [
+      "textarea[name=\"body\"]",
+      "textarea[name=\"content\"]",
+      "div[contenteditable=\"true\"]",
+      "#body",
+      "#content"
+    ],
+    "list": [
+      "select[name=\"list_id\"]",
+      "select[name=\"mail_magazine_id\"]"
+    ],
+    "saveDraftPattern": "下書き|一時保存|保存する|保存",
+    "sendPattern": "送信|配信|予約|申込|削除",
+    "template": "",
+    "templatePreferred": "",
+    "proceedPattern": "記事を書く|メールを書く|本文を書く|書く|この内容で作成|作成する|決定|次へ|進む"
+  },
+  "labels": {
+    "subject": "件名|タイトル|題名",
+    "body": "本文|メール本文|内容"
+  },
+  "loginUrlCandidates": [
+    "https://www.reservestock.jp/",
+    "https://www.reservestock.jp/service_provider_sessions/menu"
+  ],
+  "menuUrl": "https://www.reservestock.jp/service_provider_sessions/menu"
+}

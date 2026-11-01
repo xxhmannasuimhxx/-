@@ -4,3 +4,6 @@ package-lock.json
 # 認証情報（絶対にコミットしない）
 .env
 .env.local
+mailmag/.env
+mailmag/.auth/
+mailmag/out/
